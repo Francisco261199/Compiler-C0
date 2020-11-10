@@ -32,6 +32,7 @@ $letter+  { \s -> VAR_TOK (read s) }
 ">="      { \_ -> GTOE_TOK }
 "<"       { \_ -> LTHEN_TOK }
 ">"       { \_ -> GTHEN_TOK }
+";"       { \_ -> SEMICOLON_TOK }
 
 
 {
@@ -58,6 +59,7 @@ data Token
   | GTOE_TOK
   | EQUAL_TOK
   | NEQUAL_TOK
+  | SEMICOLON_TOK
   deriving (Eq, Show)
 
 }
