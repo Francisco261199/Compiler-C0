@@ -11,8 +11,13 @@ import LexerC0
 
 num   { NUM_TOK $$ }
 var   { VAR_TOK $$ }
-true  { BOOL_TOK $$ }
-false { BOOL_TOK $$ }
+True  { BOOL_TOK $$ }
+False { BOOL_TOK $$ }
+
+--Types
+int  { INT_TYPE_TOK }
+bool { BOOL_TYPE_TOK }
+
 --PARENTESIS/BRACKETS
 '(' { LPAREN_TOK }
 ')' { RPAREN_TOK }
@@ -52,41 +57,44 @@ while { WHILE_TOK }
 
 %%
 
+Stm : var '=' Exp ';'           { Assign $1 $3 }
+    | if Exp Stm Stm            { If $2 $3 $4 }
+    | if Exp Stm                { If $2 $3 Skip }
+    | else Stm                  { Else $2 }
+    | while Exp Stm             { While $2 $3 }
+    | '{' Stm '}'               { Block $2 }
+
 --calc operations
 Exp : num { Num $1 }
-    | var ';' { Var $1 }
+    | var { Var $1 }
     | Exp '+' Exp       { Add $1 $3 }
     | Exp '-' Exp       { Sub $1 $3 }
     | Exp '*' Exp       { Mult $1 $3 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
+    | Exp "==" Exp      { ISEQUAL $1 $3 }
+    | Exp "!=" Exp      { ISNEQUAL $1 $3 }
     | Exp "<="Exp       { LessOrEqual $1 $3 }
     | Exp ">="Exp       { GreaterOrEqual $1 $3 }
     | Exp "<" Exp       { LessThan $1 $3 }
     | Exp ">" Exp       { GreaterThan $1 $3 }
     | '(' Exp ')' { $2 }
 
-Stm : var '=' Exp ';'   { Assign $1 $3 }
-    | if Exp Stm Stm    { If $2 $3 $4 }
-    | else Stm          { Else $2 }
-    | while Exp Stm     { While $2 $3 }
-
-Type : true { Tbool $1 }
-     | false { Tbool $1 }
-     | num  { Tint $1 }
-
 {
 
-data Type = Tint Int
-          | Tbool Bool
+type Decl = (String, Type)
+
+data Type = Tint
+          | Tbool
           deriving(Show, Eq)
 
 data Stm = Assign String Exp
          | If Exp Stm Stm
          | Else Stm
          | While Exp Stm
-         | Block [Stm]
+         | Block Stm
          | Funct [Decl] [Stm]
+         | Skip
          deriving Show
 
 data Exp = Num Int
@@ -100,9 +108,9 @@ data Exp = Num Int
          | GreaterThan Exp Exp
          | LessOrEqual Exp Exp
          | GreaterOrEqual Exp Exp
+         | ISEQUAL Exp Exp
+         | ISNEQUAL Exp Exp
          deriving Show
-
-type Decl = (String, Type)
 
 parseError :: [Token] -> a
 parseError toks = error "parse error"
