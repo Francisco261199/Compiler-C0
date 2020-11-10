@@ -13,67 +13,73 @@ import Control.Monad (ap)
 
 -- parser produced by Happy Version 1.19.8
 
-newtype HappyAbsSyn t4 t5 = HappyAbsSyn HappyAny
+newtype HappyAbsSyn t4 t5 t6 = HappyAbsSyn HappyAny
 #if __GLASGOW_HASKELL__ >= 607
 type HappyAny = Happy_GHC_Exts.Any
 #else
 type HappyAny = forall a . a
 #endif
-happyIn4 :: t4 -> (HappyAbsSyn t4 t5)
+happyIn4 :: t4 -> (HappyAbsSyn t4 t5 t6)
 happyIn4 x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyIn4 #-}
-happyOut4 :: (HappyAbsSyn t4 t5) -> t4
+happyOut4 :: (HappyAbsSyn t4 t5 t6) -> t4
 happyOut4 x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyOut4 #-}
-happyIn5 :: t5 -> (HappyAbsSyn t4 t5)
+happyIn5 :: t5 -> (HappyAbsSyn t4 t5 t6)
 happyIn5 x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyIn5 #-}
-happyOut5 :: (HappyAbsSyn t4 t5) -> t5
+happyOut5 :: (HappyAbsSyn t4 t5 t6) -> t5
 happyOut5 x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyOut5 #-}
-happyInTok :: (Token) -> (HappyAbsSyn t4 t5)
+happyIn6 :: t6 -> (HappyAbsSyn t4 t5 t6)
+happyIn6 x = Happy_GHC_Exts.unsafeCoerce# x
+{-# INLINE happyIn6 #-}
+happyOut6 :: (HappyAbsSyn t4 t5 t6) -> t6
+happyOut6 x = Happy_GHC_Exts.unsafeCoerce# x
+{-# INLINE happyOut6 #-}
+happyInTok :: (Token) -> (HappyAbsSyn t4 t5 t6)
 happyInTok x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyInTok #-}
-happyOutTok :: (HappyAbsSyn t4 t5) -> (Token)
+happyOutTok :: (HappyAbsSyn t4 t5 t6) -> (Token)
 happyOutTok x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyOutTok #-}
 
 
 happyExpList :: HappyAddr
-happyExpList = HappyA# "\xa0\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\xf8\x78\x00\x0a\x00\x00\x00\xe2\xe3\x01\x28\x00\x00\x00\x05\x00\x00\xa0\x00\x00\x00\x14\x00\x00\x80\x02\x00\x00\x50\x00\x00\x00\x0a\x00\x00\x40\x01\x00\x00\x28\x00\x00\x00\x80\x0f\x00\x00\xf0\x01\x00\x00\x3e\x00\x00\xc0\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x70\x00\x00\x00\x0e\x00\x00\x00\x00\x00\x00\x00\x00"#
+happyExpList = HappyA# "\xc0\x04\x00\x00\x40\x00\x00\x00\x00\x00\x00\x00\x00\x80\x8f\x07\x00\x00\x10\x00\xc0\x04\x00\x00\x00\x88\x8f\x07\x00\x00\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\xc0\x04\x00\x00\x00\x80\x0f\x00\x00\x80\x0f\x00\x00\x80\x0f\x00\x00\x80\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0e\x00\x00\x00\x0e\x00\x00\x00\x00\x00\x00\x00"#
 
 {-# NOINLINE happyExpListPerState #-}
 happyExpListPerState st =
     token_strs_expected
-  where token_strs = ["error","%dummy","%start_parserC0","Exp","Stm","num","var","'('","')'","'='","'{'","'}'","'+'","'-'","'*'","'/'","'%'","';'","\"==\"","\"!=\"","\"<\"","\">\"","\">=\"","\"<=\"","if","then","else","while","%eof"]
-        bit_start = st * 29
-        bit_end = (st + 1) * 29
+  where token_strs = ["error","%dummy","%start_parserC0","Exp","Stm","Type","num","var","true","false","'('","')'","'='","'{'","'}'","'+'","'-'","'*'","'/'","'%'","';'","\"==\"","\"!=\"","\"<\"","\">\"","\">=\"","\"<=\"","if","then","else","while","%eof"]
+        bit_start = st * 32
+        bit_end = (st + 1) * 32
         read_bit = readArrayBit happyExpList
         bits = map read_bit [bit_start..bit_end - 1]
-        bits_indexed = zip bits [0..28]
+        bits_indexed = zip bits [0..31]
         token_strs_expected = concatMap f bits_indexed
         f (False, _) = []
         f (True, nr) = [token_strs !! nr]
 
 happyActOffsets :: HappyAddr
-happyActOffsets = HappyA# "\x0c\x00\x0f\x00\x00\x00\xf9\xff\x0c\x00\x0a\x00\x0c\x00\x0c\x00\x0c\x00\x0c\x00\x0c\x00\x0c\x00\x0c\x00\x0c\x00\x0c\x00\x16\x00\x16\x00\x16\x00\x16\x00\x00\x00\x00\x00\x00\x00\xfc\xff\xfc\xff\x00\x00\x00\x00"#
+happyActOffsets = HappyA# "\x29\x00\x0c\x00\x00\x00\xf7\xff\x01\x00\x29\x00\x08\x00\x00\x00\x29\x00\x29\x00\x29\x00\x29\x00\x29\x00\x29\x00\x29\x00\x29\x00\x29\x00\x14\x00\x14\x00\x14\x00\x14\x00\x00\x00\x00\x00\x00\x00\xfa\xff\xfa\xff\x00\x00\x00\x00"#
 
 happyGotoOffsets :: HappyAddr
-happyGotoOffsets = HappyA# "\x17\x00\x00\x00\x00\x00\x00\x00\x18\x00\x00\x00\x19\x00\x23\x00\x24\x00\x25\x00\x2a\x00\x2b\x00\x2c\x00\x2d\x00\x2e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
+happyGotoOffsets = HappyA# "\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x17\x00\x00\x00\x00\x00\x18\x00\x19\x00\x23\x00\x24\x00\x25\x00\x2c\x00\x2d\x00\x2f\x00\x30\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
 
 happyAdjustOffset :: Happy_GHC_Exts.Int# -> Happy_GHC_Exts.Int#
 happyAdjustOffset off = off
 
 happyDefActions :: HappyAddr
-happyDefActions = HappyA# "\x00\x00\x00\x00\xfe\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf8\xff\xf7\xff\xf5\xff\xf6\xff\xf9\xff\xfa\xff\xfb\xff\xfc\xff\xfd\xff\xf4\xff"#
+happyDefActions = HappyA# "\x00\x00\x00\x00\xfe\xff\x00\x00\x00\x00\x00\x00\x00\x00\xfd\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf7\xff\xf6\xff\xf4\xff\xf5\xff\xf8\xff\xf9\xff\xfa\xff\xfb\xff\xfc\xff\xf3\xff"#
 
 happyCheck :: HappyAddr
-happyCheck = HappyA# "\xff\xff\x08\x00\x09\x00\x0a\x00\x0b\x00\x0c\x00\x0a\x00\x0b\x00\x0c\x00\x10\x00\x11\x00\x12\x00\x13\x00\x01\x00\x04\x00\x03\x00\x01\x00\x18\x00\x08\x00\x09\x00\x0a\x00\x0b\x00\x0c\x00\x00\x00\x00\x00\x00\x00\x10\x00\x11\x00\x12\x00\x13\x00\x08\x00\x09\x00\x0a\x00\x0b\x00\x0c\x00\x00\x00\x00\x00\x00\x00\x10\x00\x11\x00\x12\x00\x13\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
+happyCheck = HappyA# "\xff\xff\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x0c\x00\x0d\x00\x0e\x00\x12\x00\x13\x00\x14\x00\x15\x00\x01\x00\x06\x00\x00\x00\x0f\x00\x1a\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x00\x00\x00\x00\x00\x00\x12\x00\x13\x00\x14\x00\x15\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x00\x00\x00\x00\x00\x00\x12\x00\x13\x00\x14\x00\x15\x00\x01\x00\x02\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
 
 happyTable :: HappyAddr
-happyTable = HappyA# "\x00\x00\x07\x00\x08\x00\x09\x00\x0a\x00\x0b\x00\x09\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x0f\x00\x03\x00\x19\x00\x05\x00\x03\x00\xff\xff\x07\x00\x08\x00\x09\x00\x0a\x00\x0b\x00\x03\x00\x05\x00\x17\x00\x0c\x00\x0d\x00\x0e\x00\x0f\x00\x07\x00\x08\x00\x09\x00\x0a\x00\x0b\x00\x16\x00\x15\x00\x14\x00\x00\x00\x00\x00\x00\x00\x00\x00\x13\x00\x12\x00\x11\x00\x10\x00\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
+happyTable = HappyA# "\x00\x00\x09\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x0b\x00\x0c\x00\x0d\x00\x0e\x00\x0f\x00\x10\x00\x11\x00\x03\x00\x1b\x00\x03\x00\x08\x00\xff\xff\x09\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x06\x00\x19\x00\x18\x00\x0e\x00\x0f\x00\x10\x00\x11\x00\x09\x00\x0a\x00\x0b\x00\x0c\x00\x0d\x00\x17\x00\x16\x00\x15\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x05\x00\x14\x00\x13\x00\x06\x00\x12\x00\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
 
-happyReduceArr = Happy_Data_Array.array (1, 16) [
+happyReduceArr = Happy_Data_Array.array (1, 19) [
 	(1 , happyReduce_1),
 	(2 , happyReduce_2),
 	(3 , happyReduce_3),
@@ -89,11 +95,14 @@ happyReduceArr = Happy_Data_Array.array (1, 16) [
 	(13 , happyReduce_13),
 	(14 , happyReduce_14),
 	(15 , happyReduce_15),
-	(16 , happyReduce_16)
+	(16 , happyReduce_16),
+	(17 , happyReduce_17),
+	(18 , happyReduce_18),
+	(19 , happyReduce_19)
 	]
 
-happy_n_terms = 25 :: Int
-happy_n_nonterms = 2 :: Int
+happy_n_terms = 27 :: Int
+happy_n_nonterms = 3 :: Int
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
@@ -106,15 +115,13 @@ happyReduction_1 happy_x_1
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_2 = happySpecReduce_3  0# happyReduction_2
-happyReduction_2 happy_x_3
-	happy_x_2
+happyReduce_2 = happySpecReduce_2  0# happyReduction_2
+happyReduction_2 happy_x_2
 	happy_x_1
-	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
-	case happyOut4 happy_x_3 of { happy_var_3 -> 
+	 =  case happyOutTok happy_x_1 of { (VAR_TOK happy_var_1) -> 
 	happyIn4
-		 (Add happy_var_1 happy_var_3
-	)}}
+		 (Var happy_var_1
+	)}
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
@@ -125,7 +132,7 @@ happyReduction_3 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (Sub happy_var_1 happy_var_3
+		 (Add happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -137,7 +144,7 @@ happyReduction_4 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (Mult happy_var_1 happy_var_3
+		 (Sub happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -149,7 +156,7 @@ happyReduction_5 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (Div happy_var_1 happy_var_3
+		 (Mult happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -161,7 +168,7 @@ happyReduction_6 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (Mod happy_var_1 happy_var_3
+		 (Div happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -173,7 +180,7 @@ happyReduction_7 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (LessOrEqual happy_var_1 happy_var_3
+		 (Mod happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -185,7 +192,7 @@ happyReduction_8 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (GreaterOrEqual happy_var_1 happy_var_3
+		 (LessOrEqual happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -197,7 +204,7 @@ happyReduction_9 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (LessThan happy_var_1 happy_var_3
+		 (GreaterOrEqual happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
@@ -209,13 +216,25 @@ happyReduction_10 happy_x_3
 	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
 	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn4
-		 (GreaterThan happy_var_1 happy_var_3
+		 (LessThan happy_var_1 happy_var_3
 	)}}
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
 happyReduce_11 = happySpecReduce_3  0# happyReduction_11
 happyReduction_11 happy_x_3
+	happy_x_2
+	happy_x_1
+	 =  case happyOut4 happy_x_1 of { happy_var_1 -> 
+	case happyOut4 happy_x_3 of { happy_var_3 -> 
+	happyIn4
+		 (GreaterThan happy_var_1 happy_var_3
+	)}}
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_12 = happySpecReduce_3  0# happyReduction_12
+happyReduction_12 happy_x_3
 	happy_x_2
 	happy_x_1
 	 =  case happyOut4 happy_x_2 of { happy_var_2 -> 
@@ -225,24 +244,17 @@ happyReduction_11 happy_x_3
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_12 = happySpecReduce_1  1# happyReduction_12
-happyReduction_12 happy_x_1
-	 =  case happyOutTok happy_x_1 of { (VAR_TOK happy_var_1) -> 
-	happyIn5
-		 (Var happy_var_1
-	)}
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_13 = happySpecReduce_3  1# happyReduction_13
-happyReduction_13 happy_x_3
-	happy_x_2
-	happy_x_1
-	 =  case happyOutTok happy_x_1 of { (VAR_TOK happy_var_1) -> 
-	case happyOutTok happy_x_3 of { (NUM_TOK happy_var_3) -> 
+happyReduce_13 = happyReduce 4# 1# happyReduction_13
+happyReduction_13 (happy_x_4 `HappyStk`
+	happy_x_3 `HappyStk`
+	happy_x_2 `HappyStk`
+	happy_x_1 `HappyStk`
+	happyRest)
+	 = case happyOutTok happy_x_1 of { (VAR_TOK happy_var_1) -> 
+	case happyOut4 happy_x_3 of { happy_var_3 -> 
 	happyIn5
 		 (Assign happy_var_1 happy_var_3
-	)}}
+	) `HappyStk` happyRest}}
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
@@ -281,39 +293,68 @@ happyReduction_16 happy_x_3
 		 (While happy_var_2 happy_var_3
 	)}}
 
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_17 = happySpecReduce_1  2# happyReduction_17
+happyReduction_17 happy_x_1
+	 =  case happyOutTok happy_x_1 of { (BOOL_TOK happy_var_1) -> 
+	happyIn6
+		 (Tbool happy_var_1
+	)}
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_18 = happySpecReduce_1  2# happyReduction_18
+happyReduction_18 happy_x_1
+	 =  case happyOutTok happy_x_1 of { (BOOL_TOK happy_var_1) -> 
+	happyIn6
+		 (Tbool happy_var_1
+	)}
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_19 = happySpecReduce_1  2# happyReduction_19
+happyReduction_19 happy_x_1
+	 =  case happyOutTok happy_x_1 of { (NUM_TOK happy_var_1) -> 
+	happyIn6
+		 (Tint happy_var_1
+	)}
+
 happyNewToken action sts stk [] =
-	happyDoAction 24# notHappyAtAll action sts stk []
+	happyDoAction 26# notHappyAtAll action sts stk []
 
 happyNewToken action sts stk (tk:tks) =
 	let cont i = happyDoAction i tk action sts stk tks in
 	case tk of {
 	NUM_TOK happy_dollar_dollar -> cont 1#;
 	VAR_TOK happy_dollar_dollar -> cont 2#;
-	LPAREN_TOK -> cont 3#;
-	RPAREN_TOK -> cont 4#;
-	ASSIGN_TOK -> cont 5#;
-	LBRACE_TOK -> cont 6#;
-	RBRACE_TOK -> cont 7#;
-	PLUS_TOK -> cont 8#;
-	MINUS_TOK -> cont 9#;
-	MULT_TOK -> cont 10#;
-	DIV_TOK -> cont 11#;
-	MOD_TOK -> cont 12#;
-	SEMICOLON_TOK -> cont 13#;
-	EQUAL_TOK -> cont 14#;
-	NEQUAL_TOK -> cont 15#;
-	LTHEN_TOK -> cont 16#;
-	GTHEN_TOK -> cont 17#;
-	GTOE_TOK -> cont 18#;
-	LTOE_TOK -> cont 19#;
-	IF_TOK -> cont 20#;
-	THEN_TOK -> cont 21#;
-	ELSE_TOK -> cont 22#;
-	WHILE_TOK -> cont 23#;
+	BOOL_TOK happy_dollar_dollar -> cont 3#;
+	BOOL_TOK happy_dollar_dollar -> cont 4#;
+	LPAREN_TOK -> cont 5#;
+	RPAREN_TOK -> cont 6#;
+	ASSIGN_TOK -> cont 7#;
+	LBRACE_TOK -> cont 8#;
+	RBRACE_TOK -> cont 9#;
+	PLUS_TOK -> cont 10#;
+	MINUS_TOK -> cont 11#;
+	MULT_TOK -> cont 12#;
+	DIV_TOK -> cont 13#;
+	MOD_TOK -> cont 14#;
+	SEMICOLON_TOK -> cont 15#;
+	EQUAL_TOK -> cont 16#;
+	NEQUAL_TOK -> cont 17#;
+	LTHEN_TOK -> cont 18#;
+	GTHEN_TOK -> cont 19#;
+	GTOE_TOK -> cont 20#;
+	LTOE_TOK -> cont 21#;
+	IF_TOK -> cont 22#;
+	THEN_TOK -> cont 23#;
+	ELSE_TOK -> cont 24#;
+	WHILE_TOK -> cont 25#;
 	_ -> happyError' ((tk:tks), [])
 	}
 
-happyError_ explist 24# tk tks = happyError' (tks, explist)
+happyError_ explist 26# tk tks = happyError' (tks, explist)
 happyError_ explist _ tk tks = happyError' ((tk:tks), explist)
 
 newtype HappyIdentity a = HappyIdentity a
@@ -345,13 +386,12 @@ parserC0 tks = happyRunIdentity happySomeParser where
 happySeq = happyDontSeq
 
 
-data Type = Tint
-          | Tbool
+data Type = Tint Int
+          | Tbool Bool
           deriving(Show, Eq)
 
-data Stm = If Exp Stm Stm
-         | Var String
-         | Assign String Int
+data Stm = Assign String Exp
+         | If Exp Stm Stm
          | Else Stm
          | While Exp Stm
          | Block [Stm]
@@ -359,6 +399,7 @@ data Stm = If Exp Stm Stm
          deriving Show
 
 data Exp = Num Int
+         | Var String
          | Add Exp Exp
          | Sub Exp Exp
          | Mult Exp Exp

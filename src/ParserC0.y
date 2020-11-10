@@ -9,9 +9,10 @@ import LexerC0
 
 %token
 
-num { NUM_TOK $$ }
-var { VAR_TOK $$ }
-
+num   { NUM_TOK $$ }
+var   { VAR_TOK $$ }
+true  { BOOL_TOK $$ }
+false { BOOL_TOK $$ }
 --PARENTESIS/BRACKETS
 '(' { LPAREN_TOK }
 ')' { RPAREN_TOK }
@@ -53,6 +54,7 @@ while { WHILE_TOK }
 
 --calc operations
 Exp : num { Num $1 }
+    | var ';' { Var $1 }
     | Exp '+' Exp       { Add $1 $3 }
     | Exp '-' Exp       { Sub $1 $3 }
     | Exp '*' Exp       { Mult $1 $3 }
@@ -64,21 +66,23 @@ Exp : num { Num $1 }
     | Exp ">" Exp       { GreaterThan $1 $3 }
     | '(' Exp ')' { $2 }
 
-Stm : var               { Var $1 }
-    | var '=' num       { Assign $1 $3 }
+Stm : var '=' Exp ';'   { Assign $1 $3 }
     | if Exp Stm Stm    { If $2 $3 $4 }
     | else Stm          { Else $2 }
     | while Exp Stm     { While $2 $3 }
 
+Type : true { Tbool $1 }
+     | false { Tbool $1 }
+     | num  { Tint $1 }
+
 {
 
-data Type = Tint
-          | Tbool
+data Type = Tint Int
+          | Tbool Bool
           deriving(Show, Eq)
 
-data Stm = If Exp Stm Stm
-         | Var String
-         | Assign String Int
+data Stm = Assign String Exp
+         | If Exp Stm Stm
          | Else Stm
          | While Exp Stm
          | Block [Stm]
@@ -86,6 +90,7 @@ data Stm = If Exp Stm Stm
          deriving Show
 
 data Exp = Num Int
+         | Var String
          | Add Exp Exp
          | Sub Exp Exp
          | Mult Exp Exp

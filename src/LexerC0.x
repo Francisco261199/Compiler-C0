@@ -3,19 +3,21 @@ module LexerC0 where
 }
 
 %wrapper "basic"
-
 $letter    = [a-zA-Z]
 $white     = [\ \t\n\r]
 $digit     = [0-9]
+$quotes     = [\""]
+$boolean    = [true false]
 
 tokens :-
-$white    ;
+$white+   ;
 if        { \_ -> IF_TOK }
 then      { \_ -> THEN_TOK }
 else      { \_ -> ELSE_TOK }
 while     { \_ -> WHILE_TOK }
 $digit+   { \s -> NUM_TOK (read s) }
 $letter+  { \s -> VAR_TOK (read s) }
+$boolean  { \s -> BOOL_TOK (read s)}
 "+"       { \_ -> PLUS_TOK }
 "-"       { \_ -> MINUS_TOK }
 "*"       { \_ -> MULT_TOK }
@@ -38,6 +40,7 @@ $letter+  { \s -> VAR_TOK (read s) }
 {
 data Token
   = NUM_TOK Int
+  | BOOL_TOK Bool
   | VAR_TOK String
   | PLUS_TOK
   | MINUS_TOK
