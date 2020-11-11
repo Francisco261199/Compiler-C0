@@ -7,6 +7,7 @@ import LexerC0
 %tokentype { Token }
 %error{ parseError }
 
+
 %token
 
 num   { NUM_TOK $$ }
@@ -62,9 +63,11 @@ Stm : var '=' Exp ';'           { Assign $1 $3 }
     | if Exp Stm                { If $2 $3 Skip }
     | else Stm                  { Else $2 }
     | while Exp Stm             { While $2 $3 }
-    | '{' Stm '}'               { Block $2 }
+    | '{' Stm1 '}'              { Block $2 }
 
---calc operations
+Stm1 : Stm { [$1] }
+     | Stm1 Stm { $1 ++ [$2] }
+
 Exp : num { Num $1 }
     | var { Var $1 }
     | Exp '+' Exp       { Add $1 $3 }
@@ -72,27 +75,28 @@ Exp : num { Num $1 }
     | Exp '*' Exp       { Mult $1 $3 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
-    | Exp "==" Exp      { ISEQUAL $1 $3 }
-    | Exp "!=" Exp      { ISNEQUAL $1 $3 }
+    | Exp "==" Exp      { Equal $1 $3 }
+    | Exp "!=" Exp      { NotEqual $1 $3 }
     | Exp "<="Exp       { LessOrEqual $1 $3 }
     | Exp ">="Exp       { GreaterOrEqual $1 $3 }
     | Exp "<" Exp       { LessThan $1 $3 }
     | Exp ">" Exp       { GreaterThan $1 $3 }
     | '(' Exp ')' { $2 }
 
+--Type : int   { Tint }
+--     | bool  { Tbool }
+
 {
 
-type Decl = (String, Type)
+data Type = Tint | Tbool deriving Show
 
-data Type = Tint
-          | Tbool
-          deriving(Show, Eq)
+data Stm1 = Stm deriving Show
 
 data Stm = Assign String Exp
          | If Exp Stm Stm
          | Else Stm
          | While Exp Stm
-         | Block Stm
+         | Block [Stm]
          | Funct [Decl] [Stm]
          | Skip
          deriving Show
@@ -108,9 +112,11 @@ data Exp = Num Int
          | GreaterThan Exp Exp
          | LessOrEqual Exp Exp
          | GreaterOrEqual Exp Exp
-         | ISEQUAL Exp Exp
-         | ISNEQUAL Exp Exp
+         | Equal Exp Exp
+         | NotEqual Exp Exp
          deriving Show
+
+type Decl = (String, Type)
 
 parseError :: [Token] -> a
 parseError toks = error "parse error"

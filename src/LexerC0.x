@@ -21,7 +21,7 @@ if                      { \_ -> IF_TOK }
 then                    { \_ -> THEN_TOK }
 else                    { \_ -> ELSE_TOK }
 while                   { \_ -> WHILE_TOK }
-return                  { \_ -> RETURN_TOK }
+return                  { \_ -> RETURN_TOK}
 int                     { \_ -> INT_TYPE_TOK }
 bool                    { \_ -> BOOL_TYPE_TOK }
 $digit+                 { \s -> NUM_TOK (read s) }
