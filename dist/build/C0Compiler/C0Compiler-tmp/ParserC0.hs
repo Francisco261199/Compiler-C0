@@ -430,8 +430,8 @@ happyNewToken action sts stk (tk:tks) =
 	case tk of {
 	NUM_TOK happy_dollar_dollar -> cont 1#;
 	VAR_TOK happy_dollar_dollar -> cont 2#;
-	TRUE_TOK -> cont 3#;
-	FALSE_TOK -> cont 4#;
+	TRUE_TOK happy_dollar_dollar -> cont 3#;
+	FALSE_TOK happy_dollar_dollar -> cont 4#;
 	INT_DEF_TOK -> cont 5#;
 	BOOL_DEF_TOK -> cont 6#;
 	LPAREN_TOK -> cont 7#;

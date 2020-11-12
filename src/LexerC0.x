@@ -19,10 +19,10 @@ while                   { \_ -> WHILE_TOK }
 return                  { \_ -> RETURN_TOK }
 int                     { \_ -> INT_DEF_TOK }
 bool                    { \_ -> BOOL_DEF_TOK }
-$digit+                 { \s -> NUM_TOK (read s) }
-$letter($letter|digit)* { \s -> VAR_TOK s }
 true                    { \s -> TRUE_TOK True }
 false                   { \s -> FALSE_TOK False }
+$digit+                 { \s -> NUM_TOK (read s) }
+$letter($letter|digit)* { \s -> VAR_TOK s }
 "+"                     { \_ -> PLUS_TOK }
 "-"                     { \_ -> MINUS_TOK }
 "*"                     { \_ -> MULT_TOK }
