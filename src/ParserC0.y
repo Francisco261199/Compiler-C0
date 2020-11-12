@@ -14,6 +14,7 @@ num     { NUM_TOK $$ }
 var     { VAR_TOK $$ }
 true    { TRUE_TOK $$ }
 false   { FALSE_TOK $$ }
+return  { RETURN_TOK }
 
 --Types
 int  { INT_DEF_TOK }
@@ -33,6 +34,7 @@ bool { BOOL_DEF_TOK }
 '/' { DIV_TOK }
 '%' { MOD_TOK }
 ';' { SEMICOLON_TOK }
+',' { COLON_TOK }
 
 --relational opr
 "=="{ EQUAL_TOK }
@@ -41,6 +43,11 @@ bool { BOOL_DEF_TOK }
 ">" { GTHEN_TOK }
 ">="{ GTOE_TOK }
 "<="{ LTOE_TOK }
+
+--Logical Opr
+"&&" { AND_TOK }
+"||" { OR_TOK }
+'!'  { NOT_TOK }
 
 --If
 if { IF_TOK }
@@ -51,23 +58,29 @@ while { WHILE_TOK }
 --------------------------
 
 --Associative/Precedence
-%nonassoc "<" ">" "==" "!=" ">=" "<="
+%nonassoc "<" ">" "==" "!=" ">=" "<=" "&&" "||" "!"
 %left '+' '-'
 %left '*' '/' '%'
 
 %%
 
+Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
+     | Type var '(' ')' '{' Stmts ReturnStm ';' '}'      { FuncNoDecl $1 $2 $6 $7 }
+
+ReturnStm : return var    { ReturnVar $2 }
+          | return num    { ReturnInt $2 }
+          | return true   { ReturnBool True }
+          | return false  { ReturnBool False }
+          | return        { ReturnEmpty }
+
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
-    | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 }
     | Type var ';'                        { Declr $1 $2 }
+    | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 } -- declaration and assignment
     | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 $7 }
     | if '(' ExpCompare ')' Stm           { If $3 $5 Skip }
-    | while ExpCompare Stm                { While $2 $3 }
+    | while '(' ExpCompare ')' Stm        { While $3 $5 }
     | '{' Stmts '}'                       { Block $2 }
-    -- | Type var Decl Stm         { $2 }
-
-Stmts : Stm { [$1] }
-     | Stmts Stm { $1 ++ [$2] }
+    | ReturnStm ';'                       { Return $1 }
 
 Exp : num { Num $1 }
     | var { Var $1 }
@@ -78,23 +91,47 @@ Exp : num { Num $1 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
 
-ExpCompare : Exp "==" Exp      { IsEqual $1 $3 }
-           | Exp "!=" Exp      { IsNEqual $1 $3 }
-           | Exp "<="Exp       { LessOrEqual $1 $3 }
-           | Exp ">="Exp       { GreaterOrEqual $1 $3 }
-           | Exp "<" Exp       { LessThan $1 $3 }
-           | Exp ">" Exp       { GreaterThan $1 $3 }
-           | true              { Bconst True }
-           | false             { Bconst False }
+ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
+           | Exp "!=" Exp                     { IsNEqual $1 $3 }
+           | Exp "<="Exp                      { LessOrEqual $1 $3 }
+           | Exp ">="Exp                      { GreaterOrEqual $1 $3 }
+           | Exp "<" Exp                      { LessThan $1 $3 }
+           | Exp ">" Exp                      { GreaterThan $1 $3 }
+           | ExpCompare  "&&" ExpCompare      { AND $1 $3 }
+           | ExpCompare "||" ExpCompare       { OR $1 $3 }
+           | '!' '(' ExpCompare ')'           { NOT $3 }
+           | true                             { Bconst True }
+           | false                            { Bconst False }
+
+Stmts : Stm { [$1] }
+      | Stmts Stm { $1 ++ [$2] }
 
 Type : int   { Tint }
      | bool  { Tbool }
 
+Decl : Type var { [($1,$2)] }
+     | Decl ',' Type var { $1 ++ [($3,$4)] }
+
 {
+type Dcl = (Type,String)
 
 data Type = Tint | Tbool deriving Show
 
-data Stmts = Stm deriving Show
+data Stmts = Stm
+           deriving Show
+
+data Decl = Dcl
+          deriving Show
+
+data Func = Funct Type String [Dcl] [Stm] ReturnStm
+          | FuncNoDecl Type String [Stm] ReturnStm
+          deriving Show
+
+data ReturnStm = ReturnVar String
+               | ReturnInt Int
+               | ReturnBool Bool
+               | ReturnEmpty
+               deriving Show
 
 data Stm = Assign String Exp
          | Declr Type String
@@ -103,7 +140,7 @@ data Stm = Assign String Exp
          | Else Stm
          | While ExpCompare Stm
          | Block [Stm]
-         | Funct [Decl] [Stm]
+         | Return ReturnStm
          | Skip
          deriving Show
 
@@ -123,9 +160,10 @@ data ExpCompare = LessThan Exp Exp
                 | IsEqual Exp Exp
                 | IsNEqual Exp Exp
                 | Bconst Bool
+                | AND ExpCompare ExpCompare
+                | OR ExpCompare ExpCompare
+                | NOT ExpCompare
                 deriving Show
-
-type Decl = (String, Type)
 
 parseError :: [Token] -> a
 parseError toks = error "parse error"

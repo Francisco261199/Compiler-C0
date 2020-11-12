@@ -11,7 +11,7 @@ $digit     = [0-9]
 tokens :-
 
 "//".*                  ;
-"/*"(\s|.)[^\/]*'*/'    ;   -- ainda não funciona
+"/*"(\s|.)[^\/]*"*/"    ;   -- ainda não funciona
 $white+                 ;
 if                      { \_ -> IF_TOK }
 else                    { \_ -> ELSE_TOK }
@@ -40,7 +40,10 @@ $letter($letter|digit)* { \s -> VAR_TOK s }
 "<"                     { \_ -> LTHEN_TOK }
 ">"                     { \_ -> GTHEN_TOK }
 ";"                     { \_ -> SEMICOLON_TOK }
-
+","                     { \_ -> COLON_TOK }
+"&&"                    { \_ -> AND_TOK }
+"||"                    { \_ -> OR_TOK }
+"!"                     { \_ -> NOT_TOK}
 
 {
 data Token
@@ -68,7 +71,11 @@ data Token
   | EQUAL_TOK
   | NEQUAL_TOK
   | SEMICOLON_TOK
+  | COLON_TOK
   | RETURN_TOK
+  | NOT_TOK
+  | AND_TOK
+  | OR_TOK
   | INT_DEF_TOK
   | BOOL_DEF_TOK
   deriving (Eq, Show)
