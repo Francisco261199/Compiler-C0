@@ -12,8 +12,8 @@ import LexerC0
 
 num     { NUM_TOK $$ }
 var     { VAR_TOK $$ }
-true    { TRUE_TOK  $$ }
-false   { FALSE_TOK  $$ }
+true    { TRUE_TOK $$ }
+false   { FALSE_TOK $$ }
 
 --Types
 int  { INT_DEF_TOK }
