@@ -4,13 +4,9 @@ module LexerC0 where
 
 %wrapper "basic"
 
-$letter    = [a-zA-Z] -- # [True False]
+$letter    = [_a-zA-Z]
 $white     = [\ \t\n\f\v\r]
 $digit     = [0-9]
-$quotes    = [\""]
-$boolean   = [True False]
-
-
 
 tokens :-
 
@@ -18,15 +14,15 @@ tokens :-
 "/*"(\s|.)[^\/]*'*/'    ;   -- ainda não funciona
 $white+                 ;
 if                      { \_ -> IF_TOK }
-then                    { \_ -> THEN_TOK }
 else                    { \_ -> ELSE_TOK }
 while                   { \_ -> WHILE_TOK }
-return                  { \_ -> RETURN_TOK}
-int                     { \_ -> INT_TYPE_TOK }
-bool                    { \_ -> BOOL_TYPE_TOK }
+return                  { \_ -> RETURN_TOK }
+int                     { \_ -> INT_DEF_TOK }
+bool                    { \_ -> BOOL_DEF_TOK }
 $digit+                 { \s -> NUM_TOK (read s) }
 $letter($letter|digit)* { \s -> VAR_TOK s }
-$boolean                { \s -> BOOL_TOK (read s)}
+true                    { \s -> TRUE_TOK s }
+false                   { \s -> FALSE_TOK s }
 "+"                     { \_ -> PLUS_TOK }
 "-"                     { \_ -> MINUS_TOK }
 "*"                     { \_ -> MULT_TOK }
@@ -49,7 +45,8 @@ $boolean                { \s -> BOOL_TOK (read s)}
 {
 data Token
   = NUM_TOK Int
-  | BOOL_TOK Bool
+  | TRUE_TOK Bool
+  | FALSE_TOK Bool
   | VAR_TOK String
   | PLUS_TOK
   | MINUS_TOK
@@ -62,7 +59,6 @@ data Token
   | RBRACE_TOK
   | IF_TOK
   | ELSE_TOK
-  | THEN_TOK
   | WHILE_TOK
   | ASSIGN_TOK
   | LTHEN_TOK
@@ -73,8 +69,8 @@ data Token
   | NEQUAL_TOK
   | SEMICOLON_TOK
   | RETURN_TOK
-  | INT_TYPE_TOK
-  | BOOL_TYPE_TOK
+  | INT_DEF_TOK
+  | BOOL_DEF_TOK
   deriving (Eq, Show)
 
 }
