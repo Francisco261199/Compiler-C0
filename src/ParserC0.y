@@ -58,7 +58,8 @@ while { WHILE_TOK }
 %%
 
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
-    | Type var '=' Exp ';'                { Declr $1 $2 $4 }
+    | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 }
+    | Type var ';'                        { Declr $1 $2 }
     | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 $7 }
     | if '(' ExpCompare ')' Stm           { If $3 $5 Skip }
     | while ExpCompare Stm                { While $2 $3 }
@@ -96,7 +97,8 @@ data Type = Tint | Tbool deriving Show
 data Stmts = Stm deriving Show
 
 data Stm = Assign String Exp
-         | Declr Type String Exp
+         | Declr Type String
+         | DeclAsgn Type String Exp
          | If ExpCompare Stm Stm
          | Else Stm
          | While ExpCompare Stm
