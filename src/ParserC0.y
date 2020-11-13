@@ -61,11 +61,11 @@ while { WHILE_TOK }
 %nonassoc "<" ">" "==" "!=" ">=" "<=" "&&" "||" "!"
 %left '+' '-'
 %left '*' '/' '%'
+%left
 
 %%
 
 Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
-     | Type var '(' ')' '{' Stmts ReturnStm ';' '}'      { FuncNoDecl $1 $2 $6 $7 }
 
 ReturnStm : return var    { ReturnVar $2 }
           | return num    { ReturnInt $2 }
@@ -81,6 +81,7 @@ Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | while '(' ExpCompare ')' Stm        { While $3 $5 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
+    | var '(' Decl ')'';'                 { FuncCall $1 $3 }
 
 Exp : num { Num $1 }
     | var { Var $1 }
@@ -103,13 +104,14 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | true                             { Bconst True }
            | false                            { Bconst False }
 
-Stmts : Stm { [$1] }
+Stmts :{- empty-} { [] }
       | Stmts Stm { $1 ++ [$2] }
 
 Type : int   { Tint }
      | bool  { Tbool }
 
-Decl : Type var { [($1,$2)] }
+Decl :{-Empty -}         { [] }
+     | Type var          { [($1,$2)] }
      | Decl ',' Type var { $1 ++ [($3,$4)] }
 
 {
@@ -124,7 +126,7 @@ data Decl = Dcl
           deriving Show
 
 data Func = Funct Type String [Dcl] [Stm] ReturnStm
-          | FuncNoDecl Type String [Stm] ReturnStm
+        --  | FuncNoDecl Type String [Stm] ReturnStm
           deriving Show
 
 data ReturnStm = ReturnVar String
@@ -139,8 +141,10 @@ data Stm = Assign String Exp
          | If ExpCompare Stm Stm
          | Else Stm
          | While ExpCompare Stm
+        -- | For Assign
          | Block [Stm]
          | Return ReturnStm
+         | FuncCall String [Dcl]
          | Skip
          deriving Show
 

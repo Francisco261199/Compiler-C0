@@ -16,9 +16,11 @@ $white+                 ;
 if                      { \_ -> IF_TOK }
 else                    { \_ -> ELSE_TOK }
 while                   { \_ -> WHILE_TOK }
+for                     { \_ -> FOR_TOK }
 return                  { \_ -> RETURN_TOK }
 int                     { \_ -> INT_DEF_TOK }
 bool                    { \_ -> BOOL_DEF_TOK }
+string                  { \_ -> STRING_TOK }
 true                    { \s -> TRUE_TOK True }
 false                   { \s -> FALSE_TOK False }
 $digit+                 { \s -> NUM_TOK (read s) }
@@ -48,6 +50,7 @@ $letter($letter|digit)* { \s -> VAR_TOK s }
 {
 data Token
   = NUM_TOK Int
+  | STRING_TOK
   | TRUE_TOK Bool
   | FALSE_TOK Bool
   | VAR_TOK String
@@ -63,6 +66,7 @@ data Token
   | IF_TOK
   | ELSE_TOK
   | WHILE_TOK
+  | FOR_TOK
   | ASSIGN_TOK
   | LTHEN_TOK
   | GTHEN_TOK
