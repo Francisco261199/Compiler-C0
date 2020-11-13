@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            C0
 description:         C0
 author:              Francisco Ribeiro && Amadeu Marques
-maintainer:          up201805092@fc.up.pt
+maintainer:          up201805092@fc.up.pt && up201804974@fc.up.pt
 category:            Language
 build-type:          Simple
 cabal-version:       >=1.10

@@ -52,8 +52,15 @@ bool { BOOL_DEF_TOK }
 --If
 if { IF_TOK }
 else { ELSE_TOK }
+
 --while
 while { WHILE_TOK }
+
+
+-- I/0
+
+printint { PRINTINT_TOK  }
+scanint { SCANINT_TOK  }
 
 --------------------------
 
@@ -73,6 +80,8 @@ ReturnStm : return var    { ReturnVar $2 }
           | return false  { ReturnBool False }
           | return        { ReturnEmpty }
 
+
+
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | Type var ';'                        { Declr $1 $2 }
     | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 } -- declaration and assignment
@@ -82,6 +91,8 @@ Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
     | var '(' Decl ')'';'                 { FuncCall $1 $3 }
+    | printint '(' var ')' ';'                { PrintInt $3 }
+    | scanint '(' var ')' ';'                { ScanInt $3   }
 
 Exp : num { Num $1 }
     | var { Var $1 }
@@ -145,6 +156,8 @@ data Stm = Assign String Exp
          | Block [Stm]
          | Return ReturnStm
          | FuncCall String [Dcl]
+         | PrintInt String
+         | ScanInt String
          | Skip
          deriving Show
 

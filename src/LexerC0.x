@@ -23,6 +23,8 @@ bool                    { \_ -> BOOL_DEF_TOK }
 string                  { \_ -> STRING_TOK }
 true                    { \s -> TRUE_TOK True }
 false                   { \s -> FALSE_TOK False }
+printint                   { \_ -> PRINTINT_TOK }
+scanint                    { \_ -> SCANINT_TOK }
 $digit+                 { \s -> NUM_TOK (read s) }
 $letter($letter|digit)* { \s -> VAR_TOK s }
 "+"                     { \_ -> PLUS_TOK }
@@ -82,6 +84,8 @@ data Token
   | OR_TOK
   | INT_DEF_TOK
   | BOOL_DEF_TOK
+  | PRINTINT_TOK
+  | SCANINT_TOK
   deriving (Eq, Show)
 
 }
