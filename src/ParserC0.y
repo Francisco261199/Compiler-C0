@@ -56,20 +56,18 @@ else { ELSE_TOK }
 --while
 while { WHILE_TOK }
 
-
 -- I/0
 
-printint { PRINTINT_TOK  }
-scanint { SCANINT_TOK  }
+printint { PRINTINT_TOK }
+scanint { SCANINT_TOK }
 
 --------------------------
 
 --Associative/Precedence
-%nonassoc "<" ">" "==" "!=" ">=" "<=" "&&" "||" "!"
+%left "<" ">" "==" "!=" ">=" "<=" "&&" "||"
 %left '+' '-'
 %left '*' '/' '%'
-%left
-
+%right '!'
 %%
 
 Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
@@ -80,6 +78,8 @@ ReturnStm : return var    { ReturnVar $2 }
           | return false  { ReturnBool False }
           | return        { ReturnEmpty }
 
+ -- PrintStm : var '(' Decl ')' { PFuncCall $1 $3 } -- chamada de função no print
+    --     | var              { $1            }
 
 
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
@@ -90,9 +90,8 @@ Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | while '(' ExpCompare ')' Stm        { While $3 $5 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
-    | var '(' Decl ')'';'                 { FuncCall $1 $3 }
-    | printint '(' var ')' ';'                { PrintInt $3 }
-    | scanint '(' var ')' ';'                { ScanInt $3   }
+    | var '(' Decl ')' ';'                { FuncCall $1 $3 }
+    | printint '(' var ')' ';'              { PrintInt $3 }
 
 Exp : num { Num $1 }
     | var { Var $1 }
@@ -102,6 +101,8 @@ Exp : num { Num $1 }
     | Exp '*' Exp       { Mult $1 $3 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
+    | var '(' Decl ')'  { FuncCallExp $1 $3 }
+    | scanint '(' ')'   {ScanInt            }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -109,11 +110,12 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp ">="Exp                      { GreaterOrEqual $1 $3 }
            | Exp "<" Exp                      { LessThan $1 $3 }
            | Exp ">" Exp                      { GreaterThan $1 $3 }
-           | ExpCompare  "&&" ExpCompare      { AND $1 $3 }
-           | ExpCompare "||" ExpCompare       { OR $1 $3 }
-           | '!' '(' ExpCompare ')'           { NOT $3 }
+           | ExpCompare  "&&" ExpCompare      { And $1 $3 }
+           | ExpCompare "||" ExpCompare       { Or $1 $3 }
+           | '!' '(' ExpCompare ')'           { Not $3 }
            | true                             { Bconst True }
            | false                            { Bconst False }
+           | var '(' Decl ')'                 { FuncCallExpC $1 $3 }
 
 Stmts :{- empty-} { [] }
       | Stmts Stm { $1 ++ [$2] }
@@ -121,7 +123,7 @@ Stmts :{- empty-} { [] }
 Type : int   { Tint }
      | bool  { Tbool }
 
-Decl :{-Empty -}         { [] }
+Decl :{-empty -}         { [] }
      | Type var          { [($1,$2)] }
      | Decl ',' Type var { $1 ++ [($3,$4)] }
 
@@ -137,7 +139,6 @@ data Decl = Dcl
           deriving Show
 
 data Func = Funct Type String [Dcl] [Stm] ReturnStm
-        --  | FuncNoDecl Type String [Stm] ReturnStm
           deriving Show
 
 data ReturnStm = ReturnVar String
@@ -146,18 +147,20 @@ data ReturnStm = ReturnVar String
                | ReturnEmpty
                deriving Show
 
+ -- data PrintStm = PFuncCall String [Decl]
+    --          deriving Show
+
 data Stm = Assign String Exp
          | Declr Type String
          | DeclAsgn Type String Exp
          | If ExpCompare Stm Stm
          | Else Stm
          | While ExpCompare Stm
+         | FuncCall String [Dcl]
+         | PrintInt String
         -- | For Assign
          | Block [Stm]
          | Return ReturnStm
-         | FuncCall String [Dcl]
-         | PrintInt String
-         | ScanInt String
          | Skip
          deriving Show
 
@@ -168,6 +171,8 @@ data Exp = Num Int
          | Mult Exp Exp
          | Div Exp Exp
          | Mod Exp Exp
+         | FuncCallExp String [Dcl]
+         | ScanInt
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
@@ -177,9 +182,10 @@ data ExpCompare = LessThan Exp Exp
                 | IsEqual Exp Exp
                 | IsNEqual Exp Exp
                 | Bconst Bool
-                | AND ExpCompare ExpCompare
-                | OR ExpCompare ExpCompare
-                | NOT ExpCompare
+                | And ExpCompare ExpCompare
+                | Or ExpCompare ExpCompare
+                | Not ExpCompare
+                | FuncCallExpC String [Dcl]
                 deriving Show
 
 parseError :: [Token] -> a
