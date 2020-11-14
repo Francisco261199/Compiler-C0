@@ -58,8 +58,8 @@ while { WHILE_TOK }
 
 -- I/0
 
-printint { PRINTINT_TOK }
-scanint { SCANINT_TOK }
+--printint { PRINTINT_TOK }
+--scanint { SCANINT_TOK }
 
 --------------------------
 
@@ -70,17 +70,17 @@ scanint { SCANINT_TOK }
 %right '!'
 %%
 
+--Funcs : Func { [$1] }
+--      | Funcs Func { $1 ++ [$2] }
+
 Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
 
-ReturnStm : return var    { ReturnVar $2 }
-          | return num    { ReturnInt $2 }
+ReturnStm : return Exps   { ReturnExp $2 }
           | return true   { ReturnBool True }
           | return false  { ReturnBool False }
-          | return        { ReturnEmpty }
 
  -- PrintStm : var '(' Decl ')' { PFuncCall $1 $3 } -- chamada de função no print
     --     | var              { $1            }
-
 
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | Type var ';'                        { Declr $1 $2 }
@@ -90,8 +90,9 @@ Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | while '(' ExpCompare ')' Stm        { While $3 $5 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
-    | var '(' Decl ')' ';'                { FuncCall $1 $3 }
-    | printint '(' var ')' ';'              { PrintInt $3 }
+    | var '(' Exps ')' ';'                { FuncCall $1 $3 }
+  --  | printint '(' var ')' ';'            { PrintInt $3 }
+
 
 Exp : num { Num $1 }
     | var { Var $1 }
@@ -101,8 +102,8 @@ Exp : num { Num $1 }
     | Exp '*' Exp       { Mult $1 $3 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
-    | var '(' Decl ')'  { FuncCallExp $1 $3 }
-    | scanint '(' ')'   {ScanInt            }
+    | var '(' Exps ')'  { FuncCallExp $1 $3 }
+  --  | scanint '(' ')'   { ScanInt            }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -115,7 +116,7 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | '!' '(' ExpCompare ')'           { Not $3 }
            | true                             { Bconst True }
            | false                            { Bconst False }
-           | var '(' Decl ')'                 { FuncCallExpC $1 $3 }
+           | var '(' Exps ')'                 { FuncCallExpC $1 $3 }
 
 Stmts :{- empty-} { [] }
       | Stmts Stm { $1 ++ [$2] }
@@ -127,24 +128,20 @@ Decl :{-empty -}         { [] }
      | Type var          { [($1,$2)] }
      | Decl ',' Type var { $1 ++ [($3,$4)] }
 
+Exps : {- Empty -}  { [] }
+     | Exp          { [$1] }
+     | Exps ',' Exp { $1 ++ [$3] }
+
 {
 type Dcl = (Type,String)
 
 data Type = Tint | Tbool deriving Show
 
-data Stmts = Stm
-           deriving Show
-
-data Decl = Dcl
-          deriving Show
-
 data Func = Funct Type String [Dcl] [Stm] ReturnStm
           deriving Show
 
-data ReturnStm = ReturnVar String
-               | ReturnInt Int
+data ReturnStm = ReturnExp [Exp]
                | ReturnBool Bool
-               | ReturnEmpty
                deriving Show
 
  -- data PrintStm = PFuncCall String [Decl]
@@ -156,8 +153,8 @@ data Stm = Assign String Exp
          | If ExpCompare Stm Stm
          | Else Stm
          | While ExpCompare Stm
-         | FuncCall String [Dcl]
-         | PrintInt String
+         | FuncCall String [Exp]
+         -- | PrintInt String
         -- | For Assign
          | Block [Stm]
          | Return ReturnStm
@@ -171,8 +168,8 @@ data Exp = Num Int
          | Mult Exp Exp
          | Div Exp Exp
          | Mod Exp Exp
-         | FuncCallExp String [Dcl]
-         | ScanInt
+         | FuncCallExp String [Exp]
+        -- | ScanInt
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
@@ -185,7 +182,7 @@ data ExpCompare = LessThan Exp Exp
                 | And ExpCompare ExpCompare
                 | Or ExpCompare ExpCompare
                 | Not ExpCompare
-                | FuncCallExpC String [Dcl]
+                | FuncCallExpC String [Exp]
                 deriving Show
 
 parseError :: [Token] -> a
