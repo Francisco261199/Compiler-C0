@@ -6,7 +6,7 @@ module LexerC0 where
 
 $white     = [\ \t\n\f\v\r]
 $digit     = [0-9]
-$graphic   = $printable # $white
+$graphic   = $printable 
 
 @id        = [A-Za-z_][A-Za-z0-9_]*
 @String    = \" ($graphic # \")*\"

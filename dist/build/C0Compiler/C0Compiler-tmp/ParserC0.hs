@@ -889,7 +889,7 @@ data Stm = Assign String Exp
          | FuncCall String [Exp]
          | PrintInt Exp
          | ScanInt String
-         | PrintStr [Char]
+         | PrintStr String
         -- | For
          | Block [Stm]
          | Return ReturnStm
