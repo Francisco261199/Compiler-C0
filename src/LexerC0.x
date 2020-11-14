@@ -21,6 +21,7 @@ for                     { \_ -> FOR_TOK }
 return                  { \_ -> RETURN_TOK }
 int                     { \_ -> INT_DEF_TOK }
 bool                    { \_ -> BOOL_DEF_TOK }
+main                    { \_ -> MAIN_TOK }
 string                  { \_ -> STRING_TOK }
 true                    { \s -> TRUE_TOK True }
 false                   { \s -> FALSE_TOK False }
@@ -53,6 +54,7 @@ $digit+                 { \s -> NUM_TOK (read s) }
 {
 data Token
   = NUM_TOK Int
+  | MAIN_TOK
   | STRING_TOK
   | TRUE_TOK Bool
   | FALSE_TOK Bool

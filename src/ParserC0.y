@@ -15,6 +15,7 @@ var     { VAR_TOK $$ }
 true    { TRUE_TOK $$ }
 false   { FALSE_TOK $$ }
 return  { RETURN_TOK }
+main    { MAIN_TOK }
 
 --Types
 int  { INT_DEF_TOK }
@@ -74,6 +75,7 @@ Funcs : Func { [$1] }
       | Funcs Func { $1 ++ [$2] }
 
 Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
+     | Type main '(' ')' '{' Stmts '}'                   { FuncMain $1 $6 }
 
 ReturnStm : return Exps   { ReturnExp $2 }
           | return true   { ReturnBool True }
@@ -81,7 +83,7 @@ ReturnStm : return Exps   { ReturnExp $2 }
 
 
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
-    | var '=' scanint '(' ')'';'          { ScanInt $1} 
+    | var '=' scanint '(' ')'';'          { ScanInt $1}
     | Type var ';'                        { Declr $1 $2 }
     | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 } -- declaration and assignment
     | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 $7 }
@@ -137,13 +139,12 @@ type Dcl = (Type,String)
 data Type = Tint | Tbool deriving Show
 
 data Func = Funct Type String [Dcl] [Stm] ReturnStm
+          | FuncMain Type [Stm]
           deriving Show
 
 data ReturnStm = ReturnExp [Exp]
                | ReturnBool Bool
                deriving Show
-
-
 
 data Stm = Assign String Exp
          | Declr Type String
