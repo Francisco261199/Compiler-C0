@@ -70,8 +70,8 @@ scanint { SCANINT_TOK }
 %right '!'
 %%
 
---Funcs : Func { [$1] }
---      | Funcs Func { $1 ++ [$2] }
+Funcs : Func { [$1] }
+      | Funcs Func { $1 ++ [$2] }
 
 Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
 
@@ -81,6 +81,7 @@ ReturnStm : return Exps   { ReturnExp $2 }
 
 
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
+    | var '=' scanint '(' ')'';'          { ScanInt $1} 
     | Type var ';'                        { Declr $1 $2 }
     | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 } -- declaration and assignment
     | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 $7 }
@@ -101,7 +102,6 @@ Exp : num { Num $1 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
     | var '(' Exps ')'  { FuncCallExp $1 $3 }
-    | scanint '(' ')'   { ScanInt            }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -153,6 +153,7 @@ data Stm = Assign String Exp
          | While ExpCompare Stm
          | FuncCall String [Exp]
          | PrintInt Exp
+         | ScanInt String
         -- | For Assign
          | Block [Stm]
          | Return ReturnStm
@@ -167,7 +168,6 @@ data Exp = Num Int
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
-         | ScanInt
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
