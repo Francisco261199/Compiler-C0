@@ -4,9 +4,10 @@ module LexerC0 where
 
 %wrapper "basic"
 
-$letter    = [_a-zA-Z]
 $white     = [\ \t\n\f\v\r]
 $digit     = [0-9]
+
+@id        = [A-Za-z_][A-Za-z0-9_]*
 
 tokens :-
 
@@ -26,7 +27,7 @@ false                   { \s -> FALSE_TOK False }
 printint                { \_ -> PRINTINT_TOK }
 scanint                 { \_ -> SCANINT_TOK }
 $digit+                 { \s -> NUM_TOK (read s) }
-$letter($letter|digit)* { \s -> VAR_TOK s }
+@id                     { \s -> VAR_TOK s }
 "+"                     { \_ -> PLUS_TOK }
 "-"                     { \_ -> MINUS_TOK }
 "*"                     { \_ -> MULT_TOK }
