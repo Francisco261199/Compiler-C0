@@ -58,8 +58,8 @@ while { WHILE_TOK }
 
 -- I/0
 
---printint { PRINTINT_TOK }
---scanint { SCANINT_TOK }
+printint { PRINTINT_TOK }
+scanint { SCANINT_TOK }
 
 --------------------------
 
@@ -79,8 +79,6 @@ ReturnStm : return Exps   { ReturnExp $2 }
           | return true   { ReturnBool True }
           | return false  { ReturnBool False }
 
- -- PrintStm : var '(' Decl ')' { PFuncCall $1 $3 } -- chamada de função no print
-    --     | var              { $1            }
 
 Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | Type var ';'                        { Declr $1 $2 }
@@ -91,7 +89,7 @@ Stm : var '=' Exp ';'                     { Assign $1 $3 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
     | var '(' Exps ')' ';'                { FuncCall $1 $3 }
-  --  | printint '(' var ')' ';'            { PrintInt $3 }
+    | printint '(' Exp ')' ';'            { PrintInt $3 }
 
 
 Exp : num { Num $1 }
@@ -103,7 +101,7 @@ Exp : num { Num $1 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
     | var '(' Exps ')'  { FuncCallExp $1 $3 }
-  --  | scanint '(' ')'   { ScanInt            }
+    | scanint '(' ')'   { ScanInt            }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -132,6 +130,7 @@ Exps : {- Empty -}  { [] }
      | Exp          { [$1] }
      | Exps ',' Exp { $1 ++ [$3] }
 
+
 {
 type Dcl = (Type,String)
 
@@ -144,8 +143,7 @@ data ReturnStm = ReturnExp [Exp]
                | ReturnBool Bool
                deriving Show
 
- -- data PrintStm = PFuncCall String [Decl]
-    --          deriving Show
+
 
 data Stm = Assign String Exp
          | Declr Type String
@@ -154,7 +152,7 @@ data Stm = Assign String Exp
          | Else Stm
          | While ExpCompare Stm
          | FuncCall String [Exp]
-         -- | PrintInt String
+         | PrintInt Exp
         -- | For Assign
          | Block [Stm]
          | Return ReturnStm
@@ -169,7 +167,7 @@ data Exp = Num Int
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
-        -- | ScanInt
+         | ScanInt
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
