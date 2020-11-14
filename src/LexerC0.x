@@ -28,8 +28,9 @@ main                    { \_ -> MAIN_TOK }
 string                  { \_ -> STRING_TOK }
 true                    { \s -> TRUE_TOK True }
 false                   { \s -> FALSE_TOK False }
-printint                { \_ -> PRINTINT_TOK }
-scanint                 { \_ -> SCANINT_TOK }
+print_int               { \_ -> PRINTINT_TOK }
+scan_int                { \_ -> SCANINT_TOK }
+print_str               { \_ -> PRINTSTR_TOK }
 $digit+                 { \s -> NUM_TOK (read s) }
 @id                     { \s -> VAR_TOK s }
 @String                 { \s -> STRING_TOK(read s) }
@@ -94,6 +95,7 @@ data Token
   | PRINTINT_TOK
   | SCANINT_TOK
   | STRING_DEF_TOK
+  | PRINTSTR_TOK
   deriving (Eq, Show)
 
 }

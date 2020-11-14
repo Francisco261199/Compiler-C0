@@ -12,7 +12,7 @@ import LexerC0
 
 num     { NUM_TOK $$ }
 str     { STRING_TOK $$ }
-var     { VAR_TOK $$ }
+id      { VAR_TOK $$ }
 true    { TRUE_TOK $$ }
 false   { FALSE_TOK $$ }
 return  { RETURN_TOK }
@@ -62,8 +62,8 @@ while { WHILE_TOK }
 -- I/0
 
 printint { PRINTINT_TOK }
-scanint { SCANINT_TOK }
-
+scanint  { SCANINT_TOK }
+printstr { PRINTSTR_TOK }
 --------------------------
 
 --Associative/Precedence
@@ -76,37 +76,38 @@ scanint { SCANINT_TOK }
 Funcs : Func { [$1] }
       | Funcs Func { $1 ++ [$2] }
 
-Func : Type var '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
-     | Type main '(' ')' '{' Stmts '}'                   { FuncMain $1 $6 }
+Func : Type id '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
+     | Type main '(' ')' '{' Stmts '}'                  { FuncMain $1 $6 }
 
 ReturnStm : return Exps   { ReturnExp $2 }
           | return true   { ReturnBool True }
           | return false  { ReturnBool False }
 
 
-Stm : var '=' Exp ';'                     { Assign $1 $3 }
-    | var '=' scanint '(' ')'';'          { ScanInt $1}
-    | Type var ';'                        { Declr $1 $2 }
-    | Type var '=' Exp ';'                { DeclAsgn $1 $2 $4 } -- declaration and assignment
+Stm : id '=' Exp ';'                      { Assign $1 $3 }
+    | id '=' scanint '(' ')'';'           { ScanInt $1 }
+    | Type id ';'                         { Declr $1 $2 }
+    | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
     | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 $7 }
     | if '(' ExpCompare ')' Stm           { If $3 $5 Skip }
     | while '(' ExpCompare ')' Stm        { While $3 $5 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
-    | var '(' Exps ')' ';'                { FuncCall $1 $3 }
+    | id '(' Exps ')' ';'                 { FuncCall $1 $3 }
     | printint '(' Exp ')' ';'            { PrintInt $3 }
+    | printstr '(' str ')' ';'            { PrintStr $3 }
 
 
 Exp : num { Num $1 }
     | str { Str $1 }
-    | var { Var $1 }
+    | id  { Var $1 }
     | '(' Exp ')'       { $2 }
     | Exp '+' Exp       { Add $1 $3 }
     | Exp '-' Exp       { Sub $1 $3 }
     | Exp '*' Exp       { Mult $1 $3 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
-    | var '(' Exps ')'  { FuncCallExp $1 $3 }
+    | id '(' Exps ')'   { FuncCallExp $1 $3 }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -119,18 +120,19 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | '!' '(' ExpCompare ')'           { Not $3 }
            | true                             { Bconst True }
            | false                            { Bconst False }
-           | var '(' Exps ')'                 { FuncCallExpC $1 $3 }
+           | id '(' Exps ')'                  { FuncCallExpC $1 $3 }
+
 
 Stmts :{- empty-} { [] }
       | Stmts Stm { $1 ++ [$2] }
 
-Type : int   { Tint }
-     | bool  { Tbool }
+Type : int    { Tint }
+     | bool   { Tbool }
      | string { Tstring }
 
 Decl :{-empty -}         { [] }
-     | Type var          { [($1,$2)] }
-     | Decl ',' Type var { $1 ++ [($3,$4)] }
+     | Type id          { [($1,$2)] }
+     | Decl ',' Type id { $1 ++ [($3,$4)] }
 
 Exps : {- Empty -}  { [] }
      | Exp          { [$1] }
@@ -159,7 +161,8 @@ data Stm = Assign String Exp
          | FuncCall String [Exp]
          | PrintInt Exp
          | ScanInt String
-        -- | For Assign
+         | PrintStr [Char]
+        -- | For
          | Block [Stm]
          | Return ReturnStm
          | Skip
