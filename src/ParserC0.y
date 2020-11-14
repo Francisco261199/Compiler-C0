@@ -11,6 +11,7 @@ import LexerC0
 %token
 
 num     { NUM_TOK $$ }
+str     { STRING_TOK $$ }
 var     { VAR_TOK $$ }
 true    { TRUE_TOK $$ }
 false   { FALSE_TOK $$ }
@@ -20,6 +21,7 @@ main    { MAIN_TOK }
 --Types
 int  { INT_DEF_TOK }
 bool { BOOL_DEF_TOK }
+string { STRING_DEF_TOK }
 
 --PARENTESIS/BRACKETS
 '(' { LPAREN_TOK }
@@ -96,6 +98,7 @@ Stm : var '=' Exp ';'                     { Assign $1 $3 }
 
 
 Exp : num { Num $1 }
+    | str { Str $1 }
     | var { Var $1 }
     | '(' Exp ')'       { $2 }
     | Exp '+' Exp       { Add $1 $3 }
@@ -123,6 +126,7 @@ Stmts :{- empty-} { [] }
 
 Type : int   { Tint }
      | bool  { Tbool }
+     | string { Tstring }
 
 Decl :{-empty -}         { [] }
      | Type var          { [($1,$2)] }
@@ -136,7 +140,7 @@ Exps : {- Empty -}  { [] }
 {
 type Dcl = (Type,String)
 
-data Type = Tint | Tbool deriving Show
+data Type = Tint | Tbool | Tstring deriving Show
 
 data Func = Funct Type String [Dcl] [Stm] ReturnStm
           | FuncMain Type [Stm]
@@ -162,6 +166,7 @@ data Stm = Assign String Exp
          deriving Show
 
 data Exp = Num Int
+         | Str String
          | Var String
          | Add Exp Exp
          | Sub Exp Exp

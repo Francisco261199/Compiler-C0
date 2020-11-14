@@ -6,8 +6,10 @@ module LexerC0 where
 
 $white     = [\ \t\n\f\v\r]
 $digit     = [0-9]
+$graphic   = $printable # $white
 
 @id        = [A-Za-z_][A-Za-z0-9_]*
+@String    = \" ($graphic # \")*\"
 
 tokens :-
 
@@ -21,6 +23,7 @@ for                     { \_ -> FOR_TOK }
 return                  { \_ -> RETURN_TOK }
 int                     { \_ -> INT_DEF_TOK }
 bool                    { \_ -> BOOL_DEF_TOK }
+string                  { \_ -> STRING_DEF_TOK }
 main                    { \_ -> MAIN_TOK }
 string                  { \_ -> STRING_TOK }
 true                    { \s -> TRUE_TOK True }
@@ -29,6 +32,7 @@ printint                { \_ -> PRINTINT_TOK }
 scanint                 { \_ -> SCANINT_TOK }
 $digit+                 { \s -> NUM_TOK (read s) }
 @id                     { \s -> VAR_TOK s }
+@String                 { \s -> STRING_TOK(read s) }
 "+"                     { \_ -> PLUS_TOK }
 "-"                     { \_ -> MINUS_TOK }
 "*"                     { \_ -> MULT_TOK }
@@ -55,7 +59,7 @@ $digit+                 { \s -> NUM_TOK (read s) }
 data Token
   = NUM_TOK Int
   | MAIN_TOK
-  | STRING_TOK
+  | STRING_TOK String
   | TRUE_TOK Bool
   | FALSE_TOK Bool
   | VAR_TOK String
@@ -89,6 +93,7 @@ data Token
   | BOOL_DEF_TOK
   | PRINTINT_TOK
   | SCANINT_TOK
+  | STRING_DEF_TOK
   deriving (Eq, Show)
 
 }
