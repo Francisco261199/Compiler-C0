@@ -6,7 +6,7 @@ module LexerC0 where
 
 $white     = [\ \t\n\f\v\r]
 $digit     = [0-9]
-$graphic   = $printable 
+$graphic   = $printable
 
 @id        = [A-Za-z_][A-Za-z0-9_]*
 @String    = \" ($graphic # \")*\"
@@ -36,6 +36,8 @@ $digit+                 { \s -> NUM_TOK (read s) }
 @String                 { \s -> STRING_TOK(read s) }
 "+"                     { \_ -> PLUS_TOK }
 "-"                     { \_ -> MINUS_TOK }
+"++"                    { \_ -> INCR_TOK }
+"--"                    { \_ -> DECR_TOK }
 "*"                     { \_ -> MULT_TOK }
 "/"                     { \_ -> DIV_TOK }
 "%"                     { \_ -> MOD_TOK }
@@ -96,6 +98,8 @@ data Token
   | SCANINT_TOK
   | STRING_DEF_TOK
   | PRINTSTR_TOK
+  | INCR_TOK
+  | DECR_TOK
   deriving (Eq, Show)
 
 }

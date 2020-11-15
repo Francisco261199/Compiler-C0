@@ -38,6 +38,8 @@ string { STRING_DEF_TOK }
 '%' { MOD_TOK }
 ';' { SEMICOLON_TOK }
 ',' { COLON_TOK }
+"++"{ INCR_TOK }
+"--"{ DECR_TOK }
 
 --relational opr
 "=="{ EQUAL_TOK }
@@ -70,7 +72,7 @@ printstr { PRINTSTR_TOK }
 %left "<" ">" "==" "!=" ">=" "<=" "&&" "||"
 %left '+' '-'
 %left '*' '/' '%'
-%right '!'
+%right '!' "++" "--"
 %%
 
 Funcs : Func { [$1] }
@@ -88,15 +90,14 @@ Stm : id '=' Exp ';'                      { Assign $1 $3 }
     | id '=' scanint '(' ')'';'           { ScanInt $1 }
     | Type id ';'                         { Declr $1 $2 }
     | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
-    | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 $7 }
-    | if '(' ExpCompare ')' Stm           { If $3 $5 Skip }
+    | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 Else $7 }
+    | if '(' ExpCompare ')' Stm           { If $3 $5 Skip Skip }
     | while '(' ExpCompare ')' Stm        { While $3 $5 }
     | '{' Stmts '}'                       { Block $2 }
     | ReturnStm ';'                       { Return $1 }
     | id '(' Exps ')' ';'                 { FuncCall $1 $3 }
     | printint '(' Exp ')' ';'            { PrintInt $3 }
     | printstr '(' str ')' ';'            { PrintStr $3 }
-
 
 Exp : num { Num $1 }
     | str { Str $1 }
@@ -108,6 +109,10 @@ Exp : num { Num $1 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
     | id '(' Exps ')'   { FuncCallExp $1 $3 }
+    | "++" id           { PreIncr $2 }
+    | id "++"           { PostIncr $1 }
+    | "--" id           { PreDecr $2 }
+    | id "--"           { PostDecr $1 }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -155,8 +160,8 @@ data ReturnStm = ReturnExp [Exp]
 data Stm = Assign String Exp
          | Declr Type String
          | DeclAsgn Type String Exp
-         | If ExpCompare Stm Stm
-         | Else Stm
+         | If ExpCompare Stm Stm Stm
+         | Else
          | While ExpCompare Stm
          | FuncCall String [Exp]
          | PrintInt Exp
@@ -177,6 +182,10 @@ data Exp = Num Int
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
+         | PreIncr String
+         | PostIncr String
+         | PreDecr String
+         | PostDecr String
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
