@@ -99,7 +99,7 @@ happyExpList = HappyA# "\x00\x00\xe0\x00\x00\x00\x00\x00\x00\x38\x00\x00\x00\x00
 {-# NOINLINE happyExpListPerState #-}
 happyExpListPerState st =
     token_strs_expected
-  where token_strs = ["error","%dummy","%start_parserC0","Funcs","Func","ReturnStm","Stm","Exp","IncrDecr","ExpCompare","Stmts","Type","Decl","Exps","num","str","id","true","false","return","main","int","bool","string","'('","')'","'='","'{'","'}'","'+'","'-'","'*'","'/'","'%'","';'","','","\"++\"","\"--\"","\"==\"","\"!=\"","\"<\"","\">\"","\">=\"","\"<=\"","\"&&\"","\"||\"","'!'","if","else","while","printint","scanint","printstr","%eof"]
+  where token_strs = ["error","%dummy","%start_parserC0","Funcs","Func","ReturnStm","Stm","Exp","Op","ExpCompare","Stmts","Type","Decl","Exps","num","str","id","true","false","return","main","int","bool","string","'('","')'","'='","'{'","'}'","'+'","'-'","'*'","'/'","'%'","';'","','","\"++\"","\"--\"","\"==\"","\"!=\"","\"<\"","\">\"","\">=\"","\"<=\"","\"&&\"","\"||\"","'!'","if","else","while","printint","scanint","printstr","%eof"]
         bit_start = st * 54
         bit_end = (st + 1) * 54
         read_bit = readArrayBit happyExpList
@@ -563,9 +563,10 @@ happyReduction_29 (happy_x_4 `HappyStk`
 #endif
 happyReduce_30 = happySpecReduce_1  4# happyReduction_30
 happyReduction_30 happy_x_1
-	 =  happyIn8
-		 (IncrDecr
-	)
+	 =  case happyOut9 happy_x_1 of { happy_var_1 -> 
+	happyIn8
+		 (VarOp happy_var_1
+	)}
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
@@ -941,11 +942,11 @@ data ReturnStm = ReturnExp [Exp]
                | ReturnBool Bool
                deriving Show
 
-data IncrDecr = PreIncr String
-              | PostIncr String
-              | PreDecr String
-              | PostDecr String
-              deriving Show
+data Op = PreIncr String
+        | PostIncr String
+        | PreDecr String
+        | PostDecr String
+        deriving Show
 
 data Stm = Assign String Exp
          | Declr Type String
@@ -972,7 +973,7 @@ data Exp = Num Int
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
-         | IncrDecr
+         | VarOp Op
          deriving Show
 
 data ExpCompare = LessThan Exp Exp

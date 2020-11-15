@@ -109,12 +109,12 @@ Exp : num { Num $1 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
     | id '(' Exps ')'   { FuncCallExp $1 $3 }
-    | IncrDecr          { IncrDecr }
+    | Op                { VarOp $1 }
 
-IncrDecr : "++" id          { PreIncr $2 }
-        | id "++"           { PostIncr $1 }
-        | "--" id           { PreDecr $2 }
-        | id "--"           { PostDecr $1 }
+Op : "++" id           { PreIncr $2 }
+   | id "++"           { PostIncr $1 }
+   | "--" id           { PreDecr $2 }
+   | id "--"           { PostDecr $1 }
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -128,7 +128,6 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | true                             { Bconst True }
            | false                            { Bconst False }
            | id '(' Exps ')'                  { FuncCallExpC $1 $3 }
-
 
 Stmts :{- empty-} { [] }
       | Stmts Stm { $1 ++ [$2] }
@@ -159,11 +158,11 @@ data ReturnStm = ReturnExp [Exp]
                | ReturnBool Bool
                deriving Show
 
-data IncrDecr = PreIncr String
-              | PostIncr String
-              | PreDecr String
-              | PostDecr String
-              deriving Show
+data Op = PreIncr String
+        | PostIncr String
+        | PreDecr String
+        | PostDecr String
+        deriving Show
 
 data Stm = Assign String Exp
          | Declr Type String
@@ -190,7 +189,7 @@ data Exp = Num Int
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
-         | IncrDecr
+         | VarOp Op
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
