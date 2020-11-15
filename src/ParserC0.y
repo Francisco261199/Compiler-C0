@@ -10,13 +10,15 @@ import LexerC0
 
 %token
 
-num     { NUM_TOK $$ }
-str     { STRING_TOK $$ }
-id      { VAR_TOK $$ }
-true    { TRUE_TOK $$ }
-false   { FALSE_TOK $$ }
-return  { RETURN_TOK }
-main    { MAIN_TOK }
+num      { NUM_TOK $$ }
+str      { STRING_TOK $$ }
+id       { VAR_TOK $$ }
+true     { TRUE_TOK $$ }
+false    { FALSE_TOK $$ }
+return   { RETURN_TOK }
+main     { MAIN_TOK }
+break    { BREAK_TOK }
+continue { CONTINUE_TOK }
 
 --Types
 int  { INT_DEF_TOK }
@@ -86,21 +88,23 @@ ReturnStm : return Exps   { ReturnExp $2 }
           | return false  { ReturnBool False }
 
 
-Stm : Op1                                    { VarOp1 $1 }
-    | if '(' ExpCompare ')' Stm else Stm     { If $3 $5 Else $7 }
-    | if '(' ExpCompare ')' Stm              { If $3 $5 Skip Skip }
-    | for '(' Op1 ExpCompare ';' Op ')' Stm  { For $3 $4 $6 $8 }
-    | while '(' ExpCompare ')' Stm           { While $3 $5 }
-    | '{' Stmts '}'                          { Block $2 }
-    | ReturnStm ';'                          { Return $1 }
-    | id '(' Exps ')' ';'                    { FuncCall $1 $3 }
-    | print_int '(' Exp ')' ';'              { PrintInt $3 }
-    | print_str '(' str ')' ';'              { PrintStr $3 }
+Stm : OpStm                                   { VarOp1 $1 }
+    | if '(' ExpCompare ')' Stm else Stm      { If $3 $5 Else $7 }
+    | if '(' ExpCompare ')' Stm               { If $3 $5 Skip Skip }
+    | for '(' OpFor ExpCompare ';' Op ')' Stm { For $3 $4 $6 $8 }
+    | for '(' OpFor ExpCompare ';' Op ')' ';' { For $3 $4 $6 NoStm }
+    | while '(' ExpCompare ')' Stm            { While $3 $5 }
+    | while '(' ExpCompare ')' ';'            { While $3 NoStm }
+    | '{' Stmts '}'                           { Block $2 }
+    | ReturnStm ';'                           { Return $1 }
+    | id '(' Exps ')' ';'                     { FuncCall $1 $3 }
+    | print_int '(' Exp ')' ';'               { PrintInt $3 }
+    | print_str '(' str ')' ';'               { PrintStr $3 }
 
 Exp : num { Num $1 }
     | str { Str $1 }
     | id  { Var $1 }
-    | '(' Exp ')'       { $2 }
+    | '(' Exp ')'       { InsideBracket $2 }
     | Exp '+' Exp       { Add $1 $3 }
     | Exp '-' Exp       { Sub $1 $3 }
     | Exp '*' Exp       { Mult $1 $3 }
@@ -114,10 +118,14 @@ Op : "++" id           { PreIncr $2 }
    | "--" id           { PreDecr $2 }
    | id "--"           { PostDecr $1 }
 
-Op1 : id '=' Exp ';'                      { Assign $1 $3 }
-    | id '=' scan_int '(' ')' ';'         { ScanInt $1 }
-    | Type id ';'                         { Declr $1 $2 }
-    | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
+OpStm : id '=' Exp ';'                      { Assign $1 $3 }
+      | id '=' scan_int '(' ')' ';'         { ScanInt $1 }
+      | Type id ';'                         { Declr $1 $2 }
+      | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
+
+OpFor : ';'                                 { Empty }
+      | id '=' Exp ';'                      { ForAssign $1 $3 }
+      | Type id '=' Exp ';'                 { ForDeclAsgn $1 $2 $4 } -- declaration and assignment
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -167,24 +175,30 @@ data Op = PreIncr String
         | PostDecr String
         deriving Show
 
+data OpStm = Assign String Exp
+           | Declr Type String
+           | DeclAsgn Type String Exp
+           | ScanInt String
+           deriving Show
+
+data OpFor = ForAssign String Exp
+           | ForDeclAsgn Type String Exp
+           | Empty
+           deriving Show
+
 data Stm = If ExpCompare Stm Stm Stm
          | Else
-         | VarOp1 AssnStm
+         | VarOp1 OpStm
          | While ExpCompare Stm
          | FuncCall String [Exp]
          | PrintInt Exp
          | PrintStr String
-         | For AssnStm ExpCompare Op Stm
+         | For OpFor ExpCompare Op Stm
          | Block [Stm]
          | Return ReturnStm
          | Skip
+         | NoStm
          deriving Show
-
-data AssnStm = Assign String Exp
-             | Declr Type String
-             | DeclAsgn Type String Exp
-             | ScanInt String
-             deriving Show
 
 data Exp = Num Int
          | Str String
@@ -196,6 +210,7 @@ data Exp = Num Int
          | Mod Exp Exp
          | FuncCallExp String [Exp]
          | VarOp Op
+         | InsideBracket Exp
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
