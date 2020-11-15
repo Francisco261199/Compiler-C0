@@ -88,7 +88,7 @@ ReturnStm : return Exps   { ReturnExp $2 }
           | return false  { ReturnBool False }
 
 
-Stm : OpStm                                   { VarOp1 $1 }
+Stm : OpStm                                   { VarOp $1 }
     | if '(' ExpCompare ')' Stm else Stm      { If $3 $5 Else $7 }
     | if '(' ExpCompare ')' Stm               { If $3 $5 Skip Skip }
     | for '(' OpFor ExpCompare ';' Op ')' Stm { For $3 $4 $6 $8 }
@@ -111,12 +111,12 @@ Exp : num { Num $1 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
     | id '(' Exps ')'   { FuncCallExp $1 $3 }
-    | Op                { VarOp $1 }
 
 Op : "++" id           { PreIncr $2 }
    | id "++"           { PostIncr $1 }
    | "--" id           { PreDecr $2 }
    | id "--"           { PostDecr $1 }
+   | id '=' Exp        { OpAssign $1 $3 }
 
 OpStm : id '=' Exp ';'                      { Assign $1 $3 }
       | id '=' scan_int '(' ')' ';'         { ScanInt $1 }
@@ -173,6 +173,7 @@ data Op = PreIncr String
         | PostIncr String
         | PreDecr String
         | PostDecr String
+        | OpAssign String Exp
         deriving Show
 
 data OpStm = Assign String Exp
@@ -188,7 +189,7 @@ data OpFor = ForAssign String Exp
 
 data Stm = If ExpCompare Stm Stm Stm
          | Else
-         | VarOp1 OpStm
+         | VarOp OpStm
          | While ExpCompare Stm
          | FuncCall String [Exp]
          | PrintInt Exp
@@ -209,7 +210,6 @@ data Exp = Num Int
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
-         | VarOp Op
          | InsideBracket Exp
          deriving Show
 
