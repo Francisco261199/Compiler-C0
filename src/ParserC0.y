@@ -60,12 +60,12 @@ else { ELSE_TOK }
 
 --while
 while { WHILE_TOK }
-
+for { FOR_TOK }
 -- I/0
 
-printint { PRINTINT_TOK }
-scanint  { SCANINT_TOK }
-printstr { PRINTSTR_TOK }
+print_int { PRINTINT_TOK }
+scan_int  { SCANINT_TOK }
+print_str { PRINTSTR_TOK }
 --------------------------
 
 --Associative/Precedence
@@ -86,18 +86,16 @@ ReturnStm : return Exps   { ReturnExp $2 }
           | return false  { ReturnBool False }
 
 
-Stm : id '=' Exp ';'                      { Assign $1 $3 }
-    | id '=' scanint '(' ')'';'           { ScanInt $1 }
-    | Type id ';'                         { Declr $1 $2 }
-    | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
-    | if '(' ExpCompare ')' Stm else Stm  { If $3 $5 Else $7 }
-    | if '(' ExpCompare ')' Stm           { If $3 $5 Skip Skip }
-    | while '(' ExpCompare ')' Stm        { While $3 $5 }
-    | '{' Stmts '}'                       { Block $2 }
-    | ReturnStm ';'                       { Return $1 }
-    | id '(' Exps ')' ';'                 { FuncCall $1 $3 }
-    | printint '(' Exp ')' ';'            { PrintInt $3 }
-    | printstr '(' str ')' ';'            { PrintStr $3 }
+Stm : Op1                                    { VarOp1 $1 }
+    | if '(' ExpCompare ')' Stm else Stm     { If $3 $5 Else $7 }
+    | if '(' ExpCompare ')' Stm              { If $3 $5 Skip Skip }
+    | for '(' Op1 ExpCompare ';' Op ')' Stm  { For $3 $4 $6 $8 }
+    | while '(' ExpCompare ')' Stm           { While $3 $5 }
+    | '{' Stmts '}'                          { Block $2 }
+    | ReturnStm ';'                          { Return $1 }
+    | id '(' Exps ')' ';'                    { FuncCall $1 $3 }
+    | print_int '(' Exp ')' ';'              { PrintInt $3 }
+    | print_str '(' str ')' ';'              { PrintStr $3 }
 
 Exp : num { Num $1 }
     | str { Str $1 }
@@ -115,6 +113,11 @@ Op : "++" id           { PreIncr $2 }
    | id "++"           { PostIncr $1 }
    | "--" id           { PreDecr $2 }
    | id "--"           { PostDecr $1 }
+
+Op1 : id '=' Exp ';'                      { Assign $1 $3 }
+    | id '=' scan_int '(' ')' ';'         { ScanInt $1 }
+    | Type id ';'                         { Declr $1 $2 }
+    | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
 
 ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp "!=" Exp                     { IsNEqual $1 $3 }
@@ -164,21 +167,24 @@ data Op = PreIncr String
         | PostDecr String
         deriving Show
 
-data Stm = Assign String Exp
-         | Declr Type String
-         | DeclAsgn Type String Exp
-         | If ExpCompare Stm Stm Stm
+data Stm = If ExpCompare Stm Stm Stm
          | Else
+         | VarOp1 AssnStm
          | While ExpCompare Stm
          | FuncCall String [Exp]
          | PrintInt Exp
-         | ScanInt String
          | PrintStr String
-        -- | For
+         | For AssnStm ExpCompare Op Stm
          | Block [Stm]
          | Return ReturnStm
          | Skip
          deriving Show
+
+data AssnStm = Assign String Exp
+             | Declr Type String
+             | DeclAsgn Type String Exp
+             | ScanInt String
+             deriving Show
 
 data Exp = Num Int
          | Str String
