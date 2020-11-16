@@ -60,7 +60,7 @@ string { STRING_DEF_TOK }
 if { IF_TOK }
 else { ELSE_TOK }
 
---while
+--cycles
 while { WHILE_TOK }
 for { FOR_TOK }
 -- I/0
@@ -84,17 +84,13 @@ Func : Type id '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
      | Type main '(' ')' '{' Stmts '}'                  { FuncMain $1 $6 }
 
 ReturnStm : return Exps   { ReturnExp $2 }
-          | return true   { ReturnBool True }
-          | return false  { ReturnBool False }
 
 
 Stm : OpStm                                   { VarOp $1 }
     | if '(' ExpCompare ')' Stm else Stm      { If $3 $5 Else $7 }
     | if '(' ExpCompare ')' Stm               { If $3 $5 Skip Skip }
     | for '(' OpFor ExpCompare ';' Op ')' Stm { For $3 $4 $6 $8 }
-    | for '(' OpFor ExpCompare ';' Op ')' ';' { For $3 $4 $6 NoStm }
     | while '(' ExpCompare ')' Stm            { While $3 $5 }
-    | while '(' ExpCompare ')' ';'            { While $3 NoStm }
     | '{' Stmts '}'                           { Block $2 }
     | ReturnStm ';'                           { Return $1 }
     | id '(' Exps ')' ';'                     { FuncCall $1 $3 }
@@ -104,13 +100,15 @@ Stm : OpStm                                   { VarOp $1 }
 Exp : num { Num $1 }
     | str { Str $1 }
     | id  { Var $1 }
-    | '(' Exp ')'       { InsideBracket $2 }
+    | '(' Exp ')'       { $2 }
     | Exp '+' Exp       { Add $1 $3 }
     | Exp '-' Exp       { Sub $1 $3 }
     | Exp '*' Exp       { Mult $1 $3 }
     | Exp '/' Exp       { Div $1 $3 }
     | Exp '%' Exp       { Mod $1 $3 }
     | id '(' Exps ')'   { FuncCallExp $1 $3 }
+    | true              { Bconst True }
+    | false             { Bconst False }
 
 Op : "++" id           { PreIncr $2 }
    | id "++"           { PostIncr $1 }
@@ -136,8 +134,6 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | ExpCompare  "&&" ExpCompare      { And $1 $3 }
            | ExpCompare "||" ExpCompare       { Or $1 $3 }
            | '!' '(' ExpCompare ')'           { Not $3 }
-           | true                             { Bconst True }
-           | false                            { Bconst False }
            | id '(' Exps ')'                  { FuncCallExpC $1 $3 }
 
 Stmts :{- empty-} { [] }
@@ -166,7 +162,6 @@ data Func = Funct Type String [Dcl] [Stm] ReturnStm
           deriving Show
 
 data ReturnStm = ReturnExp [Exp]
-               | ReturnBool Bool
                deriving Show
 
 data Op = PreIncr String
@@ -204,13 +199,13 @@ data Stm = If ExpCompare Stm Stm Stm
 data Exp = Num Int
          | Str String
          | Var String
+         | Bconst Bool
          | Add Exp Exp
          | Sub Exp Exp
          | Mult Exp Exp
          | Div Exp Exp
          | Mod Exp Exp
          | FuncCallExp String [Exp]
-         | InsideBracket Exp
          deriving Show
 
 data ExpCompare = LessThan Exp Exp
@@ -219,7 +214,6 @@ data ExpCompare = LessThan Exp Exp
                 | GreaterOrEqual Exp Exp
                 | IsEqual Exp Exp
                 | IsNEqual Exp Exp
-                | Bconst Bool
                 | And ExpCompare ExpCompare
                 | Or ExpCompare ExpCompare
                 | Not ExpCompare
