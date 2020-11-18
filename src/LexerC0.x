@@ -24,8 +24,6 @@ return                  { \_ -> RETURN_TOK }
 int                     { \_ -> INT_DEF_TOK }
 bool                    { \_ -> BOOL_DEF_TOK }
 string                  { \_ -> STRING_DEF_TOK }
-break                   { \_ -> BREAK_TOK }
-continue                { \_ -> CONTINUE_TOK }
 main                    { \_ -> MAIN_TOK }
 true                    { \s -> TRUE_TOK True }
 false                   { \s -> FALSE_TOK False }
@@ -101,8 +99,6 @@ data Token
   | PRINTSTR_TOK
   | INCR_TOK
   | DECR_TOK
-  | BREAK_TOK
-  | CONTINUE_TOK
   deriving (Eq, Show)
 
 }

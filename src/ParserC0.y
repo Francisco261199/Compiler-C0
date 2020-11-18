@@ -17,8 +17,6 @@ true     { TRUE_TOK $$ }
 false    { FALSE_TOK $$ }
 return   { RETURN_TOK }
 main     { MAIN_TOK }
-break    { BREAK_TOK }
-continue { CONTINUE_TOK }
 
 --Types
 int  { INT_DEF_TOK }
