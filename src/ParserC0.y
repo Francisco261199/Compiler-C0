@@ -78,8 +78,7 @@ print_str { PRINTSTR_TOK }
 Funcs : Func { [$1] }
       | Funcs Func { $1 ++ [$2] }
 
-Func : Type id '(' Decl ')' '{' Stmts ReturnStm ';' '}' { Funct $1 $2 $4 $7 $8 }
-     | Type main '(' ')' '{' Stmts '}'                  { FuncMain $1 $6 }
+Func : Type id '(' Decl ')' '{' Stmts '}' { Funct $1 $2 $4 $7 }
 
 ReturnStm : return Exps   { ReturnExp $2 }
 
@@ -131,7 +130,7 @@ ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
            | Exp ">" Exp                      { GreaterThan $1 $3 }
            | ExpCompare  "&&" ExpCompare      { And $1 $3 }
            | ExpCompare "||" ExpCompare       { Or $1 $3 }
-           | '!' '(' ExpCompare ')'           { Not $3 }
+           | '!' ExpCompare                   { Not $2 }
            | id '(' Exps ')'                  { FuncCallExpC $1 $3 }
 
 Stmts :{- empty-} { [] }
@@ -155,8 +154,7 @@ type Dcl = (Type,String)
 
 data Type = Tint | Tbool | Tstring deriving Show
 
-data Func = Funct Type String [Dcl] [Stm] ReturnStm
-          | FuncMain Type [Stm]
+data Func = Funct Type String [Dcl] [Stm]
           deriving Show
 
 data ReturnStm = ReturnExp [Exp]

@@ -56,7 +56,7 @@ $digit+                 { \s -> NUM_TOK (read s) }
 "&&"                    { \_ -> AND_TOK }
 "||"                    { \_ -> OR_TOK }
 "!"                     { \_ -> NOT_TOK}
-
+--bool_tok para true e false
 {
 data Token
   = NUM_TOK Int
