@@ -83,8 +83,8 @@ ReturnStm : return Exps   { ReturnExp $2 }
 
 
 Stm : OpStm                                   { VarOp $1 }
-    | if '(' ExpCompare ')' Stm else Stm      { If $3 $5 Else $7 }
-    | if '(' ExpCompare ')' Stm               { If $3 $5 Skip Skip }
+    | if '(' ExpCompare ')' Stm else Stm      { IfElse $3 $5 $7 }
+    | if '(' ExpCompare ')' Stm               { If $3 $5 }
     | for '(' OpFor ExpCompare ';' Op ')' Stm { For $3 $4 $6 $8 }
     | while '(' ExpCompare ')' Stm            { While $3 $5 }
     | '{' Stmts '}'                           { Block $2 }
@@ -121,12 +121,12 @@ OpFor : ';'                                 { Empty }
       | id '=' Exp ';'                      { ForAssign $1 $3 }
       | Type id '=' Exp ';'                 { ForDeclAsgn $1 $2 $4 } -- declaration and assignment
 
-ExpCompare : Exp "==" Exp                     { IsEqual $1 $3 }
-           | Exp "!=" Exp                     { IsNEqual $1 $3 }
-           | Exp "<="Exp                      { LessOrEqual $1 $3 }
-           | Exp ">="Exp                      { GreaterOrEqual $1 $3 }
-           | Exp "<" Exp                      { LessThan $1 $3 }
-           | Exp ">" Exp                      { GreaterThan $1 $3 }
+ExpCompare : Exp "==" Exp                     { Cond IsEqual $1 $3 }
+           | Exp "!=" Exp                     { Cond IsNEqual $1 $3 }
+           | Exp "<="Exp                      { Cond LessOrEqual $1 $3 }
+           | Exp ">="Exp                      { Cond GreaterOrEqual $1 $3 }
+           | Exp "<" Exp                      { Cond LessThan $1 $3 }
+           | Exp ">" Exp                      { Cond GreaterThan $1 $3 }
            | ExpCompare  "&&" ExpCompare      { And $1 $3 }
            | ExpCompare "||" ExpCompare       { Or $1 $3 }
            | '!' ExpCompare                   { Not $2 }
@@ -169,6 +169,9 @@ data Op = PreIncr String
 data BinOp = Add | Minus | Times | Div | Mod
             deriving Show
 
+data RelOp = LessThan | GreaterThan | LessOrEqual | GreaterOrEqual | IsEqual | IsNEqual
+            deriving Show
+
 data OpStm = Assign String Exp
            | Declr Type String
            | DeclAsgn Type String Exp
@@ -180,8 +183,8 @@ data OpFor = ForAssign String Exp
            | Empty
            deriving Show
 
-data Stm = If ExpCompare Stm Stm Stm
-         | Else
+data Stm = If ExpCompare Stm
+         | IfElse ExpCompare Stm Stm
          | VarOp OpStm
          | While ExpCompare Stm
          | FuncCall String [Exp]
@@ -190,8 +193,6 @@ data Stm = If ExpCompare Stm Stm Stm
          | For OpFor ExpCompare Op Stm
          | Block [Stm]
          | Return ReturnStm
-         | Skip
-         | NoStm
          deriving Show
 
 data Exp = Num Int
@@ -202,12 +203,7 @@ data Exp = Num Int
          | FuncCallExp String [Exp]
          deriving Show
 
-data ExpCompare = LessThan Exp Exp
-                | GreaterThan Exp Exp
-                | LessOrEqual Exp Exp
-                | GreaterOrEqual Exp Exp
-                | IsEqual Exp Exp
-                | IsNEqual Exp Exp
+data ExpCompare = Cond RelOp Exp Exp
                 | And ExpCompare ExpCompare
                 | Or ExpCompare ExpCompare
                 | Not ExpCompare
