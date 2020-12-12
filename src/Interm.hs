@@ -46,7 +46,30 @@ transExpr tabl (BinOp op e1 e2) dest
 
 
 transCond :: Table -> ExpCompare -> Label -> Label -> [Instr]
-transCond tabl (ExpCompare x, labelt, labelf) = case ExpCompare of
-                                                  Just true -> return [JUMP labelt]
-                                                  Just false -> return [JUMP labelf]
-                                                  Nothing -> error "invalid"
+transCond tabl (ExpCompare) labelt labelf
+  = case ExpCompare of
+    RelOp exp exp -> do code
+
+
+transStm :: Table -> Stm -> State Count [Instr]
+transStm tabl (Assign var exp) = case Map.lookup var tabl of
+                                  Nothing -> error "undifined variable"
+                                  Just dest -> do temp <- newTemp
+                                                  code <- TransExpr tabl exp temp
+                                                  return (code ++ [MOVE dest temp])
+transStm tabl (If ExpCompare stm1) = do ltrue <- newLabel
+                                        lfalse <- newLabel
+                                        code0 <- transCond tabl ExpCompare ltrue lfalse
+                                        code1 <- transStm tabl stm1
+                                        return (code0 ++ [LABEL ltrue] ++
+                                                code1 ++ [LABEL lfalse])
+
+transStm tabl (IfElse cond stm1 stm2)
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       lend <- newLabel
+       code0 <- transCond tabl cond ltrue lfalse
+       code1 <- transStm tabl stm1
+       code2 <- transStm tabl stm2
+       return (code0 ++ [LABEL ltrue] ++ code1 ++
+              [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
