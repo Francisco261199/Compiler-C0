@@ -16,7 +16,6 @@ id       { VAR_TOK $$ }
 true     { TRUE_TOK $$ }
 false    { FALSE_TOK $$ }
 return   { RETURN_TOK }
-main     { MAIN_TOK }
 
 --Types
 int  { INT_DEF_TOK }
@@ -98,11 +97,11 @@ Exp : num { Num $1 }
     | str { Str $1 }
     | id  { Var $1 }
     | '(' Exp ')'       { $2 }
-    | Exp '+' Exp       { Add $1 $3 }
-    | Exp '-' Exp       { Sub $1 $3 }
-    | Exp '*' Exp       { Mult $1 $3 }
-    | Exp '/' Exp       { Div $1 $3 }
-    | Exp '%' Exp       { Mod $1 $3 }
+    | Exp '+' Exp       { Op Add $1 $3 }
+    | Exp '-' Exp       { Op Minus $1 $3 }
+    | Exp '*' Exp       { Op Times $1 $3 }
+    | Exp '/' Exp       { Op Div $1 $3 }
+    | Exp '%' Exp       { Op Mod $1 $3 }
     | id '(' Exps ')'   { FuncCallExp $1 $3 }
     | true              { Bconst True }
     | false             { Bconst False }
@@ -167,6 +166,9 @@ data Op = PreIncr String
         | OpAssign String Exp
         deriving Show
 
+data BinOp = Add | Minus | Times | Div | Mod
+            deriving Show
+
 data OpStm = Assign String Exp
            | Declr Type String
            | DeclAsgn Type String Exp
@@ -196,11 +198,7 @@ data Exp = Num Int
          | Str String
          | Var String
          | Bconst Bool
-         | Add Exp Exp
-         | Sub Exp Exp
-         | Mult Exp Exp
-         | Div Exp Exp
-         | Mod Exp Exp
+         | Op BinOp Exp Exp
          | FuncCallExp String [Exp]
          deriving Show
 
