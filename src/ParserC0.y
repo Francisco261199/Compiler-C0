@@ -79,16 +79,13 @@ Funcs : Func { [$1] }
 
 Func : Type id '(' Decl ')' '{' Stmts '}' { Funct $1 $2 $4 $7 }
 
-ReturnStm : return Exps   { ReturnExp $2 }
-
-
 Stm : OpStm                                   { VarOp $1 }
     | if '(' ExpCompare ')' Stm else Stm      { IfElse $3 $5 $7 }
     | if '(' ExpCompare ')' Stm               { If $3 $5 }
     | for '(' OpFor ExpCompare ';' Op ')' Stm { For $3 $4 $6 $8 }
     | while '(' ExpCompare ')' Stm            { While $3 $5 }
     | '{' Stmts '}'                           { Block $2 }
-    | ReturnStm ';'                           { Return $1 }
+    | return Exps ';'                         { Return $2 }
     | id '(' Exps ')' ';'                     { FuncCall $1 $3 }
     | print_int '(' Exp ')' ';'               { PrintInt $3 }
     | print_str '(' str ')' ';'               { PrintStr $3 }
@@ -156,9 +153,6 @@ data Type = Tint | Tbool | Tstring deriving Show
 data Func = Funct Type String [Dcl] [Stm]
           deriving Show
 
-data ReturnStm = ReturnExp [Exp]
-               deriving Show
-
 data Op = PreIncr String
         | PostIncr String
         | PreDecr String
@@ -192,7 +186,7 @@ data Stm = If ExpCompare Stm
          | PrintStr String
          | For OpFor ExpCompare Op Stm
          | Block [Stm]
-         | Return ReturnStm
+         | Return [Exp]
          deriving Show
 
 data Exp = Num Int

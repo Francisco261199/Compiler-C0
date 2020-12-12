@@ -31,7 +31,7 @@ data Instr = MOVE Temp Temp
 
 
 transExpr :: Table -> Expr -> Temp -> State Count [Instr]
-transExpr tabl (Var x) dest = case Map.lookup x tabl of
+transExpr tabl (VarOp (Declr _ x)) dest = case Map.lookup x tabl of
                                 Just temp -> return [Move dest temp]
                                 Nothing -> error "invalid variable"
 
