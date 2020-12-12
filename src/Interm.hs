@@ -37,9 +37,16 @@ transExpr tabl (Var x) dest = case Map.lookup x tabl of
 
 transExpr tabl (Num n) dest = return [MOVEI dest n]
 
-transExpr tabl (Op op e1 e2) dest
+transExpr tabl (BinOp op e1 e2) dest
   = do temp1 <- newTemp
        temp2 <- newTemp
        code1 <- transExpr tabl e1 temp1
        code2 <- transExpr tabl e2 temp2
        return (code1 ++ code2 ++ [Op op dest temp1 temp2])
+
+
+transCond :: Table -> ExpCompare -> Label -> Label -> [Instr]
+transCond tabl (ExpCompare x, labelt, labelf) = case ExpCompare of
+                                                  Just true -> return [JUMP labelt]
+                                                  Just false -> return [JUMP labelf]
+                                                  Nothing -> error "invalid"
