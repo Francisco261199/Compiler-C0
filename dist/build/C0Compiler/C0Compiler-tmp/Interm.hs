@@ -54,12 +54,17 @@ transStm tabl (VarOp (DeclAsgn tp x expr)) dest = do t1 <- newTemp
                                                      code2 <- transExpr tabl' expr t1
                                                      return (code2++code1++[MOVE dest t1])
 transStm tabl (VarOp (Assign var expr)) dest
-  = case Map.lookup var tabl
-        Just temp -> do t1 <- newTemp
-                        code1 <- transExpr tabl expr t1
-                        return (code1++[MOVE dest t1])
+  = do t1 <- newTemp
+       code1 <- transExpr tabl expr t1
+       return (code1++[MOVE dest t1])
 
-transStm tabl (If cond stm)
+transCond :: Table -> ExpCompare -> Label -> Label -> [Instr]
+transCond tabl (Cond RelOp e1 e1) labelt labelf
+ = case ExpCompare of
+    RelOp exp exp -> do code
+
+
+transStm tabl (If cond stm) dest
   = do ltrue <- newLabel
        lfalse <- newLabel
        code0 <- transCond tabl cond ltrue lfalse
@@ -67,7 +72,7 @@ transStm tabl (If cond stm)
        return (code0 ++ [LABEL ltrue] ++
                code1 ++ [LABEL lfalse])
 
-transStm tabl (IfElse cond stm1 stm2)
+transStm tabl (IfElse cond stm1 stm2) dest
   = do ltrue <- newLabel
        lfalse <- newLabel
        lend <- newLabel
@@ -94,12 +99,6 @@ transExpr tabl (Op op e1 e2) dest
        code1 <- transExpr tabl e1 temp1
        code2 <- transExpr tabl e2 temp2
        return (code1 ++ code2 ++ [OP op dest temp1 temp2])
-
---transCond :: Table -> ExpCompare -> Label -> Label -> [Instr]
---transCond tabl (ExpCompare) labelt labelf
---  = case ExpCompare of
---    RelOp exp exp -> do code
-
 
 --transStm :: Table -> Stm -> State Count [Instr]
 --transStm tabl (Assign var exp) = case Map.lookup var tabl of
