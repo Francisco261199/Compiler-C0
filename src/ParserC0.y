@@ -160,8 +160,7 @@ data Op = PreIncr String
         | OpAssign String Exp
         deriving Show
 
-data BinOp = Add | Minus | Times | Div | Mod
-            deriving Show
+data BinOp = Add | Minus | Times | Div | Mod deriving Show
 
 data RelOp = LessThan | GreaterThan | LessOrEqual | GreaterOrEqual | IsEqual | IsNEqual
             deriving Show

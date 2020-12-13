@@ -39,44 +39,61 @@ extendTable:: Table -> [(Temp,String)] -> Table
 extendTable tbl [] = tbl
 extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 
-transStm :: Table -> Stm -> State Count [Instr]
-transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
-                                        Just temp -> error "variable already defined"
-                                        Nothing -> do temp1 <- newTemp
-                                                      let tabl' = extendTable tabl [(temp1,x)]
-                                                       in case Map.lookup x tabl' of
-                                                          Nothing -> error "asdasd"
-                                                          Just temp2 -> return [MOVE temp2 x]
+--extendTableIm:: Table -> [(Temp,Int)] -> Table
+--extendTableIm tbl [] = tbl
+--extendTableIm tbl ((temp,n):rest) = extendTableIm (Map.insert n temp tbl) rest
 
---transStm tabl (VarOp (DeclAsgn tp x expr)) = do t1 <- newTemp
---                                                code1 <- transStm tabl (VarOp (Declr tp x))
---                                                code2 <- transExpr tabl expr t1
---                                                case Map.lookup x
---                                                return (code1++code2++[MOVE t2 t1])
+transStm :: Table -> Stm -> Temp -> State Count [Instr]
+transStm tabl (VarOp (Declr tp x)) dest = case Map.lookup x tabl of
+                                            Just temp -> return [MOVE temp x]
+                                            Nothing -> return [MOVE dest x]
 
---transStm tabl (VarOp ( _ x)) dest = case Map.lookup x tabl of
---                                          Just temp -> return [MOVE dest temp]
---                                          Nothing -> error "invalid variable"
+transStm tabl (VarOp (DeclAsgn tp x expr)) dest = do t1 <- newTemp
+                                                     let tabl' = extendTable tabl [(dest,x)]
+                                                     code1 <- transStm tabl' (VarOp (Declr tp x)) dest
+                                                     code2 <- transExpr tabl' expr t1
+                                                     return (code2++code1++[MOVE dest t1])
+transStm tabl (VarOp (Assign var expr)) dest
+  = case Map.lookup var tabl
+        Just temp -> do t1 <- newTemp
+                        code1 <- transExpr tabl expr t1
+                        return (code1++[MOVE dest t1])
+
+transStm tabl (If cond stm)
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       code0 <- transCond tabl cond ltrue lfalse
+       code1 <- transStm tabl stm
+       return (code0 ++ [LABEL ltrue] ++
+               code1 ++ [LABEL lfalse])
+
+transStm tabl (IfElse cond stm1 stm2)
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       lend <- newLabel
+       code0 <- transCond tabl cond ltrue
+       code1 <- transStm tabl stm1
+       code2 <- transStm tabl stm2
+       return (code0 ++ [LABEL ltrue] ++ code1 ++
+               [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
+
 
 transExpr:: Table -> Exp -> Temp -> State Count [Instr]
 transExpr tabl (Num n) dest = return [MOVEI dest n]
 
-transExpr tabl (Var x) dest
-  = case Map.lookup x tabl of
-      Just temp -> return [MOVE dest temp]
-      Nothing -> error "invalid variable"
+transExpr tabl (Var x) dest = return [MOVE dest x]
 
 transExpr tabl (Str str) dest
   = case Map.lookup str tabl of
       Just temp -> return [MOVE dest temp]
       Nothing -> error "invalid variable"
--- transExpr tabl (BinOp e1 e2) dest
---  = do temp1 <- newTemp
---       temp2 <- newTemp
---       code1 <- transExpr tabl e1 temp1
---       code2 <- transExpr tabl e2 temp2
---       return (code1 ++ code2 ++ [Op op dest temp1 temp2])
 
+transExpr tabl (Op op e1 e2) dest
+  = do temp1 <- newTemp
+       temp2 <- newTemp
+       code1 <- transExpr tabl e1 temp1
+       code2 <- transExpr tabl e2 temp2
+       return (code1 ++ code2 ++ [OP op dest temp1 temp2])
 
 --transCond :: Table -> ExpCompare -> Label -> Label -> [Instr]
 --transCond tabl (ExpCompare) labelt labelf
