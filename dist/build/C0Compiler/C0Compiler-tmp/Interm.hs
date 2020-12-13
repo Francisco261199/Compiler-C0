@@ -63,13 +63,13 @@ transExpr tabl (Num n) dest = return [MOVEI dest n]
 
 transExpr tabl (Var x) dest
   = case Map.lookup x tabl of
-    Just temp -> return [MOVE dest temp]
-    Nothing -> error "invalid variable"
+      Just temp -> return [MOVE dest temp]
+      Nothing -> error "invalid variable"
 
-transExpr tabl (Str str) dest =
-  =case Map.lookup str tabl of
-    Just temp -> return [MOVE dest temp]
-    Nothing -> error "invalid variable"
+transExpr tabl (Str str) dest
+  = case Map.lookup str tabl of
+      Just temp -> return [MOVE dest temp]
+      Nothing -> error "invalid variable"
 -- transExpr tabl (BinOp e1 e2) dest
 --  = do temp1 <- newTemp
 --       temp2 <- newTemp
