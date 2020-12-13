@@ -4,11 +4,21 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Control.Monad.State
 import ParserC0
+import Data.Typeable
 
 type Temp = String
 type Label = String
 type Table = Map String String
 type Count = (Int,Int)
+
+data Instr = MOVE Temp Temp
+           | MOVEI Temp Int
+           | OP BinOp Temp Temp Temp
+           | OPI BinOp Temp Temp Int
+           | LABEL Label
+           | JUMP Label
+           | COND Temp RelOp Temp Label Label
+           deriving Show
 
 newTemp :: State Count Temp
 newTemp = do (temps,labels )<-get
@@ -24,22 +34,19 @@ insertVar :: Table -> String -> State Count Table
 insertVar tabl x = do temp <- newTemp
                       return (Map.insert x temp tabl)
 
-data Instr = MOVE Temp Temp
-           | MOVEI Temp Int
-           | OP BinOp Temp Temp Temp
-           | OPI BinOp Temp Temp Int
-           | LABEL Label
-           | JUMP Label
-           | COND Temp RelOp Temp Label Label
-           deriving Show
+
+--extendTable:: Table -> [Decl] -> Table
+--extendTable tbl [] = tbl
+--extendTable tbl (())
 
 transStm :: Table -> Stm -> State Count [Instr]
 transStm tabl (VarOp (Declr _ x)) = case Map.lookup x tabl of
-                                        Just temp -> return [MOVE temp x]
-                                        Nothing -> error "invalid variable"
+                                        Just temp -> error "variable already defined"
+                                        Nothing -> do temp <- newTemp
+                                                      insertVar tabl x
+                                                      return [MOVE temp x]
 
 transStm tabl (VarOp (DeclAsgn tp x expr)) = do t1 <- newTemp
-                                                insertVar tabl x
                                                 code1 <- transStm tabl (VarOp (Declr tp x))
                                                 code2 <- transExpr tabl expr t1
                                                 return (code1++code2)
