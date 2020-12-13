@@ -35,21 +35,24 @@ insertVar tabl x = do temp <- newTemp
                       return (Map.insert x temp tabl)
 
 
---extendTable:: Table -> [Decl] -> Table
---extendTable tbl [] = tbl
---extendTable tbl (())
+extendTable:: Table -> [(Temp,String)] -> Table
+extendTable tbl [] = tbl
+extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 
 transStm :: Table -> Stm -> State Count [Instr]
-transStm tabl (VarOp (Declr _ x)) = case Map.lookup x tabl of
+transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
                                         Just temp -> error "variable already defined"
-                                        Nothing -> do temp <- newTemp
-                                                      insertVar tabl x
-                                                      return [MOVE temp x]
+                                        Nothing -> do temp1 <- newTemp
+                                                      let tabl' = extendTable tabl [(temp1,x)]
+                                                       in case Map.lookup x tabl' of
+                                                          Nothing -> error "asdasd"
+                                                          Just temp2 -> return [MOVE temp2 x]
 
-transStm tabl (VarOp (DeclAsgn tp x expr)) = do t1 <- newTemp
-                                                code1 <- transStm tabl (VarOp (Declr tp x))
-                                                code2 <- transExpr tabl expr t1
-                                                return (code1++code2)
+--transStm tabl (VarOp (DeclAsgn tp x expr)) = do t1 <- newTemp
+--                                                code1 <- transStm tabl (VarOp (Declr tp x))
+--                                                code2 <- transExpr tabl expr t1
+--                                                case Map.lookup x
+--                                                return (code1++code2++[MOVE t2 t1])
 
 --transStm tabl (VarOp ( _ x)) dest = case Map.lookup x tabl of
 --                                          Just temp -> return [MOVE dest temp]
@@ -57,8 +60,16 @@ transStm tabl (VarOp (DeclAsgn tp x expr)) = do t1 <- newTemp
 
 transExpr:: Table -> Exp -> Temp -> State Count [Instr]
 transExpr tabl (Num n) dest = return [MOVEI dest n]
-transExpr tabl (Var a) dest = return [MOVE dest a]
-transExpr tabl (Str str) dest = return [MOVE dest str]
+
+transExpr tabl (Var x) dest
+  = case Map.lookup x tabl of
+    Just temp -> return [MOVE dest temp]
+    Nothing -> error "invalid variable"
+
+transExpr tabl (Str str) dest =
+  =case Map.lookup str tabl of
+    Just temp -> return [MOVE dest temp]
+    Nothing -> error "invalid variable"
 -- transExpr tabl (BinOp e1 e2) dest
 --  = do temp1 <- newTemp
 --       temp2 <- newTemp
