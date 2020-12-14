@@ -88,13 +88,14 @@ transStm tabl (While cond stm1) dest
                [LABEL ltrue] ++ code2 ++
                [JUMP lloop, LABEL lend])
 
-transStm tabl (Block (first:rest)) dest
-  = do code1 <- transBlock tabl (first:rest) dest
+transStm tabl (Block stms) dest
+  = do code1 <- transBlock tabl stms dest
        return (code1)
 
 transStm tabl (Return expr) dest
   = do code1 <- transExpr tabl expr dest
        return [RETURN code1]
+
 
 transBlock:: Table -> [Stm] -> Temp -> State Count [Instr]
 transBlock tabl [] dest = return []
