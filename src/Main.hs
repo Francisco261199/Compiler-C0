@@ -10,6 +10,6 @@ import Control.Monad.State
 main :: IO ()
 main = do
   passed <- getContents
-  let func = parserC0 (alexScanTokens passed)
-  let code = evalState (transStm Map.empty func) (0,0)
-  print code
+  --let func = parserC0 (alexScanTokens passed)
+  --let code = evalState (transStm Map.empty func) (0,0)
+  print passed

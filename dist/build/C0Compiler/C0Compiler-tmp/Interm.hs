@@ -58,30 +58,24 @@ transStm tabl (VarOp (Assign var expr)) dest
        code1 <- transExpr tabl expr t1
        return (code1++[MOVE dest t1])
 
-transCond :: Table -> ExpCompare -> Label -> Label -> [Instr]
-transCond tabl (Cond RelOp e1 e1) labelt labelf
- = case ExpCompare of
-    RelOp exp exp -> do code
-
-
 transStm tabl (If cond stm) dest
   = do ltrue <- newLabel
        lfalse <- newLabel
        code0 <- transCond tabl cond ltrue lfalse
-       code1 <- transStm tabl stm
-       return (code0 ++ [LABEL ltrue] ++
-               code1 ++ [LABEL lfalse])
+       temp <- newTemp
+       code1 <- transStm tabl stm temp
+       return (code0 ++ [LABEL ltrue] ++ code1 ++ [LABEL lfalse])
 
 transStm tabl (IfElse cond stm1 stm2) dest
-  = do ltrue <- newLabel
-       lfalse <- newLabel
-       lend <- newLabel
-       code0 <- transCond tabl cond ltrue
-       code1 <- transStm tabl stm1
-       code2 <- transStm tabl stm2
-       return (code0 ++ [LABEL ltrue] ++ code1 ++
-               [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
-
+   = do ltrue <- newLabel
+        lfalse <- newLabel
+        lend <- newLabel
+        code0 <- transCond tabl cond ltrue lfalse
+        temp1 <- newTemp
+        temp2 <- newTemp
+        code1 <- transStm tabl stm1 temp1
+        code2 <- transStm tabl stm2 temp2
+        return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
 
 transExpr:: Table -> Exp -> Temp -> State Count [Instr]
 transExpr tabl (Num n) dest = return [MOVEI dest n]
@@ -99,6 +93,32 @@ transExpr tabl (Op op e1 e2) dest
        code1 <- transExpr tabl e1 temp1
        code2 <- transExpr tabl e2 temp2
        return (code1 ++ code2 ++ [OP op dest temp1 temp2])
+
+
+transCond :: Table -> ExpCompare -> Label -> Label -> State Count [Instr]
+transCond tabl (Cond op e1 e2) labelt labelf = do temp1 <- newTemp
+                                                  temp2 <- newTemp
+                                                  code1 <- transExpr tabl e1 temp1
+                                                  code2 <- transExpr tabl e2 temp2
+                                                  return (code1++code2++[COND temp1 op temp2 labelt labelf])
+
+transCond tabl (Not exp) labelt labelf = do temp1 <- transCond tabl exp labelf labelt
+                                            return temp1
+
+transCond tabl (And e1 e2) labelt labelf = do sclbl <- newLabel
+                                              code1 <- transCond tabl e1 sclbl labelf
+                                              code2 <- transCond tabl e2 labelt labelf
+                                              return (code1++[LABEL sclbl]++code2)
+
+transCond tabl (Or e1 e2) labelt labelf = do sclbl <- newLabel
+                                             code1 <- transCond tabl e1 labelt sclbl
+                                             code2 <- transCond tabl e2 labelt labelf
+                                             return (code1++[LABEL sclbl]++code2)
+
+transCond tabl (CBool True) labelt labelf = return [JUMP labelt]
+
+transCond tabl (CBool False) labelt labelf = return [JUMP labelf]
+
 
 --transStm :: Table -> Stm -> State Count [Instr]
 --transStm tabl (Assign var exp) = case Map.lookup var tabl of

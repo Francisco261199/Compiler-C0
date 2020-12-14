@@ -128,6 +128,8 @@ ExpCompare : Exp "==" Exp                     { Cond IsEqual $1 $3 }
            | ExpCompare "||" ExpCompare       { Or $1 $3 }
            | '!' ExpCompare                   { Not $2 }
            | id '(' Exps ')'                  { FuncCallExpC $1 $3 }
+           | true                             { CBool True         }
+           | false                            { CBool False        }
 
 Stmts :{- empty-} { [] }
       | Stmts Stm { $1 ++ [$2] }
@@ -165,6 +167,7 @@ data BinOp = Add | Minus | Times | Div | Mod deriving Show
 data RelOp = LessThan | GreaterThan | LessOrEqual | GreaterOrEqual | IsEqual | IsNEqual
             deriving Show
 
+
 data OpStm = Assign String Exp
            | Declr Type String
            | DeclAsgn Type String Exp
@@ -201,6 +204,7 @@ data ExpCompare = Cond RelOp Exp Exp
                 | Or ExpCompare ExpCompare
                 | Not ExpCompare
                 | FuncCallExpC String [Exp]
+                | CBool Bool
                 deriving Show
 
 parseError :: [Token] -> a
