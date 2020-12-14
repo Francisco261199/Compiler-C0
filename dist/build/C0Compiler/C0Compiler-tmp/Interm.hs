@@ -18,8 +18,13 @@ data Instr = MOVE Temp Temp
            | LABEL Label
            | JUMP Label
            | COND Temp RelOp Temp Label Label
-           | RETURN [Instr]
+           | RETURN Temp
+           | PRINTINT Temp
+           | PRINTSTR Temp
+           | SCANINT
            deriving Show
+
+--data FunIR = FunIR Ident [Dcl] [Instr]
 
 newTemp :: State Count Temp
 newTemp = do (temps,labels )<-get
@@ -43,6 +48,7 @@ extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 --extendTableIm:: Table -> [(Temp,Int)] -> Table
 --extendTableIm tbl [] = tbl
 --extendTableIm tbl ((temp,n):rest) = extendTableIm (Map.insert n temp tbl) rest
+
 
 transStm :: Table -> Stm -> Temp -> State Count [Instr]
 transStm tabl (VarOp (Declr tp x)) dest = case Map.lookup x tabl of
@@ -78,6 +84,22 @@ transStm tabl (IfElse cond stm1 stm2) dest
         code2 <- transStm tabl stm2 temp2
         return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
 
+{-
+transStm tabl (For decl cond op stm1) dest
+  = do ltrue <- newLabel
+       lloop <- newLabel
+       lend <- newLabel
+       lcond <- newLabel
+       tempdcl <- newTemp
+       code0 <- transExpr tabl decl tempdcl
+       code1 <- transCond tabl cond ltrue lend
+       code2 <- transOp tabl op
+       code3 <- transStm tabl stm1 dest
+       return (code0 ++ [LABEL lloop] ++
+               code1 ++ [LABEL ltrue] ++ code3 ++ code2 ++
+               [JUMP lloop, LABEL lend])
+-}
+
 transStm tabl (While cond stm1) dest
   = do ltrue <- newLabel
        lloop <- newLabel
@@ -93,9 +115,19 @@ transStm tabl (Block stms) dest
        return (code1)
 
 transStm tabl (Return expr) dest
-  = do code1 <- transExpr tabl expr dest
-       return [RETURN code1]
+  = do temp <-newTemp
+       code <- transExpr tabl expr dest
+       return (code ++ [RETURN temp])
 
+transStm tabl (PrintInt expr) dest
+  = do temp <- newTemp
+       code <- transExpr tabl expr dest
+       return (code ++ [PRINTINT temp])
+
+--transStm tabl (PrintStr expr) dest
+--  = do temp <- newTemp
+--       code <- transExpr tabl expr dest
+--       return (code ++ [PRINTSTR temp])
 
 transBlock:: Table -> [Stm] -> Temp -> State Count [Instr]
 transBlock tabl [] dest = return []
@@ -121,6 +153,7 @@ transExpr tabl (Op op e1 e2) dest
        code2 <- transExpr tabl e2 temp2
        return (code1 ++ code2 ++ [OP op dest temp1 temp2])
 
+transExpr tabl ScanInt dest = return [SCANINT]
 
 transCond :: Table -> ExpCompare -> Label -> Label -> State Count [Instr]
 transCond tabl (Cond op e1 e2) labelt labelf = do temp1 <- newTemp

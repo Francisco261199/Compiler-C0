@@ -93,15 +93,16 @@ Stm : OpStm                                   { VarOp $1 }
 Exp : num { Num $1 }
     | str { Str $1 }
     | id  { Var $1 }
-    | '(' Exp ')'       { $2 }
-    | Exp '+' Exp       { Op Add $1 $3 }
-    | Exp '-' Exp       { Op Minus $1 $3 }
-    | Exp '*' Exp       { Op Times $1 $3 }
-    | Exp '/' Exp       { Op Div $1 $3 }
-    | Exp '%' Exp       { Op Mod $1 $3 }
-    | id '(' Exps ')'   { FuncCallExp $1 $3 }
-    | true              { Bconst True }
-    | false             { Bconst False }
+    | scan_int '(' ')' ';' { ScanInt }
+    | '(' Exp ')'          { $2 }
+    | Exp '+' Exp          { Op Add $1 $3 }
+    | Exp '-' Exp          { Op Minus $1 $3 }
+    | Exp '*' Exp          { Op Times $1 $3 }
+    | Exp '/' Exp          { Op Div $1 $3 }
+    | Exp '%' Exp          { Op Mod $1 $3 }
+    | id '(' Exps ')'      { FuncCallExp $1 $3 }
+    | true                 { Bconst True }
+    | false                { Bconst False }
 
 Op : "++" id           { PreIncr $2 }
    | id "++"           { PostIncr $1 }
@@ -110,7 +111,6 @@ Op : "++" id           { PreIncr $2 }
    | id '=' Exp        { OpAssign $1 $3 }
 
 OpStm : id '=' Exp ';'                      { Assign $1 $3 }
-      | id '=' scan_int '(' ')' ';'         { ScanInt $1 }
       | Type id ';'                         { Declr $1 $2 }
       | Type id '=' Exp ';'                 { DeclAsgn $1 $2 $4 } -- declaration and assignment
 
@@ -171,7 +171,6 @@ data RelOp = LessThan | GreaterThan | LessOrEqual | GreaterOrEqual | IsEqual | I
 data OpStm = Assign String Exp
            | Declr Type String
            | DeclAsgn Type String Exp
-           | ScanInt String
            deriving Show
 
 data OpFor = ForAssign String Exp
@@ -196,6 +195,7 @@ data Exp = Num Int
          | Var String
          | Bconst Bool
          | Op BinOp Exp Exp
+         | ScanInt 
          | FuncCallExp String [Exp]
          deriving Show
 
