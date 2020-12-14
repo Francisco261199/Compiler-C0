@@ -18,6 +18,7 @@ data Instr = MOVE Temp Temp
            | LABEL Label
            | JUMP Label
            | COND Temp RelOp Temp Label Label
+           | RETURN [Instr]
            deriving Show
 
 newTemp :: State Count Temp
@@ -77,6 +78,31 @@ transStm tabl (IfElse cond stm1 stm2) dest
         code2 <- transStm tabl stm2 temp2
         return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
 
+transStm tabl (While cond stm1) dest
+  = do ltrue <- newLabel
+       lloop <- newLabel
+       lend <- newLabel
+       code1 <- transCond tabl cond ltrue lend
+       code2 <- transStm tabl stm1 dest
+       return ([LABEL lloop] ++ code1 ++
+               [LABEL ltrue] ++ code2 ++
+               [JUMP lloop, LABEL lend])
+
+transStm tabl (Block (first:rest)) dest
+  = do code1 <- transBlock tabl (first:rest) dest
+       return (code1)
+
+transStm tabl (Return expr) dest
+  = do code1 <- transExpr tabl expr dest
+       return [RETURN code1]
+
+transBlock:: Table -> [Stm] -> Temp -> State Count [Instr]
+transBlock tabl [] dest = return []
+transBlock tabl (first:rest) dest
+  = do code1 <- transStm tabl first dest
+       code2 <- transBlock tabl rest dest
+       return (code1 ++ code2)
+
 transExpr:: Table -> Exp -> Temp -> State Count [Instr]
 transExpr tabl (Num n) dest = return [MOVEI dest n]
 
@@ -126,19 +152,3 @@ transCond tabl (CBool False) labelt labelf = return [JUMP labelf]
 --                                  Just dest -> do temp <- newTemp
 --                                                  code <- TransExpr tabl exp temp
 --                                                  return (code ++ [MOVE dest temp])
---transStm tabl (If ExpCompare stm1) = do ltrue <- newLabel
---                                        lfalse <- newLabel
---                                        code0 <- transCond tabl ExpCompare ltrue lfalse
---                                        code1 <- transStm tabl stm1
---                                        return (code0 ++ [LABEL ltrue] ++
---                                                code1 ++ [LABEL lfalse])
-
---transStm tabl (IfElse cond stm1 stm2)
---  = do ltrue <- newLabel
---       lfalse <- newLabel
---       lend <- newLabel
---       code0 <- transCond tabl cond ltrue lfalse
---       code1 <- transStm tabl stm1
---       code2 <- transStm tabl stm2
---       return (code0 ++ [LABEL ltrue] ++ code1 ++
---              [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
