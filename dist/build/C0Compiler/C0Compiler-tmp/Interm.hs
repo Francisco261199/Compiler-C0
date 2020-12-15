@@ -23,10 +23,10 @@ data Instr = MOVE Temp Temp
            | PRINTSTR Temp
            | CALL String [Temp]
            | SCANINT
+           | FUNCIR String [Temp] [Instr]
            deriving Show
 
-data FuncIR = FuncIR String [Temp] [Instr]
-            deriving Show
+--data FuncIR = deriving Show
 
 newTemp :: State Count Temp
 newTemp = do (temps,labels )<-get
@@ -54,20 +54,21 @@ extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 --transAst :: Table -> [Func] -> State Count [Instr]
 --transAst tabl
 
-transFunc :: Table -> Func -> State Count FuncIR
-transFunc tabl (Funct _ name [decls] block) = do tabl1 <- getDeclFunc tabl [decls]
-                                                 tabl2 <- getDecl tabl1 (Block block)
-                                                 let dclList = getDeclList tabl2 [decls]
-                                                 code1 <- transBlock tabl2 block
-                                                 return (FuncIR name dclList code1)
-
-getDeclList :: Table -> [Dcl] -> [Temp]
-getDeclList tabl [] = []
+transFunc :: Table -> Func -> State Count [Instr]
+transFunc tabl (Funct _ name [decls] [block]) = do tabl1 <- getDeclFunc tabl [decls]
+                                                   tabl2 <- getDecl tabl1 (Block [block])
+                                                   dclList <- getDeclList tabl1 [decls]
+                                                   code1 <- transBlock tabl2 [block]
+                                                   return [FUNCIR name dclList code1]
+--get list of temps for FuncIR
+getDeclList :: Table -> [Dcl] -> State Count [Temp]
+getDeclList tabl [] = return []
 getDeclList tabl ((tp,name):rest) = case Map.lookup name tabl of
                                       Just temp -> do temp1 <- getDeclList tabl rest
-                                                      return (temp++temp1)
+                                                      return ([temp] ++ temp1)
                                       Nothing -> error "variable not defined"
 
+--get table with all temps defined
 getDeclFunc :: Table -> [Dcl] -> State Count Table
 getDeclFunc tabl [] = return tabl
 getDeclFunc tabl (first:rest) = do table1 <- getDeclFuncAux tabl first
@@ -79,6 +80,7 @@ getDeclFuncAux tabl (_,name) = do temp <- newTemp
                                   let tabl1 = extendTable tabl [(temp,name)]
                                   return (tabl1)
 
+--get table with all temps to use for that block
 getDecl :: Table -> Stm -> State Count Table
 getDecl tabl (Block []) = return tabl
 getDecl tabl (Block (stm:stms)) = do tabl1 <- getDeclAux tabl stm
@@ -98,7 +100,7 @@ getDeclAux tabl stm = case stm of
                                                       Nothing -> error "Variable not defined"
                        (Block stm1) -> do tabl' <- getDecl tabl (Block stm1)
                                           return tabl'
-
+                       stm -> return tabl
 transStm :: Table -> Stm -> State Count [Instr]
 transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
                                         Just temp -> return [MOVE temp x]
@@ -253,11 +255,3 @@ transCond tabl (CBool False) labelt labelf = return [JUMP labelf]
 -- transCond tabl (FuncCallExpC func exp) labelf
  --  = do (code1,temps) <- transExps tabl exp
   --     return (code1 ++ [CALL func (temps)])
-
-
---transStm :: Table -> Stm -> State Count [Instr]
---transStm tabl (Assign var exp) = case Map.lookup var tabl of
---                                  Nothing -> error "undifined variable"
---                                  Just dest -> do temp <- newTemp
---                                                  code <- TransExpr tabl exp temp
---                                                  return (code ++ [MOVE dest temp])
