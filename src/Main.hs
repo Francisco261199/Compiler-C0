@@ -2,10 +2,10 @@ module Main where
 
 import ParserC0
 import LexerC0
-import Interm
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Control.Monad.State
+--import Interm
+--import Data.Map (Map)
+--import qualified Data.Map as Map
+--import Control.Monad.State
 
 main :: IO ()
 main = do

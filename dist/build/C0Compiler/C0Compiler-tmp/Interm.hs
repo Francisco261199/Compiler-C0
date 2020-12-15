@@ -25,7 +25,8 @@ data Instr = MOVE Temp Temp
            | SCANINT
            deriving Show
 
---data FunIR = FunIR Ident [Dcl] [Instr]
+data FuncIR = FuncIR String [Temp] [Instr]
+            deriving Show
 
 newTemp :: State Count Temp
 newTemp = do (temps,labels )<-get
@@ -50,30 +51,53 @@ extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 --extendTableIm tbl [] = tbl
 --extendTableIm tbl ((temp,n):rest) = extendTableIm (Map.insert n temp tbl) rest
 
+--transAst :: Table -> [Func] -> State Count [Instr]
+--transAst tabl
 
+transFunc :: Table -> Func -> State Count FuncIR
+transFunc tabl (Funct _ name [decls] block) = do tabl1 <- getDeclFunc tabl [decls]
+                                                 tabl2 <- getDecl tabl1 (Block block)
+                                                 let dclList = getDeclList tabl2 [decls]
+                                                 code1 <- transBlock tabl2 block
+                                                 return (FuncIR name dclList code1)
 
+getDeclList :: Table -> [Dcl] -> [Temp]
+getDeclList tabl [] = []
+getDeclList tabl ((tp,name):rest) = case Map.lookup name tabl of
+                                      Just temp -> do temp1 <- getDeclList tabl rest
+                                                      return (temp++temp1)
+                                      Nothing -> error "variable not defined"
 
+getDeclFunc :: Table -> [Dcl] -> State Count Table
+getDeclFunc tabl [] = return tabl
+getDeclFunc tabl (first:rest) = do table1 <- getDeclFuncAux tabl first
+                                   table2 <- getDeclFunc table1 rest
+                                   return (table2)
 
-getDeclAux :: Table -> Stm -> State Count Table
-getDeclAux tabl stm = case stm of
-                        (VarOp (Declr t n)) -> do temp <- newTemp
-                                                  let tabl1 = extendTable tabl [(temp,n)]
-                                                  return (tabl1)
-                        (VarOp (DeclAsgn tp x expr)) -> do temp <- newTemp
-                                                           let tabl1 = extendTable tabl [(temp,x)]
-                                                           return (tabl1)
-                        (VarOp (Assign var expr)) -> case Map.lookup var tabl of
-                                                       Just temp -> return tabl
-                                                       Nothing -> error "Variable not defined"
-                        (Block stm1) -> do tabl' <- getDecl tabl (Block stm1)
-                                           return tabl'
-
+getDeclFuncAux :: Table -> Dcl -> State Count Table
+getDeclFuncAux tabl (_,name) = do temp <- newTemp
+                                  let tabl1 = extendTable tabl [(temp,name)]
+                                  return (tabl1)
 
 getDecl :: Table -> Stm -> State Count Table
 getDecl tabl (Block []) = return tabl
 getDecl tabl (Block (stm:stms)) = do tabl1 <- getDeclAux tabl stm
                                      tabl2 <- getDecl tabl1 (Block stms)
-                                     return tabl2
+                                     return (tabl2)
+
+getDeclAux :: Table -> Stm -> State Count Table
+getDeclAux tabl stm = case stm of
+                       (VarOp (Declr t n)) -> do temp <- newTemp
+                                                 let tabl1 = extendTable tabl [(temp,n)]
+                                                 return (tabl1)
+                       (VarOp (DeclAsgn tp x expr)) -> do temp <- newTemp
+                                                          let tabl1 = extendTable tabl [(temp,x)]
+                                                          return (tabl1)
+                       (VarOp (Assign var expr)) -> case Map.lookup var tabl of
+                                                      Just temp -> return tabl
+                                                      Nothing -> error "Variable not defined"
+                       (Block stm1) -> do tabl' <- getDecl tabl (Block stm1)
+                                          return tabl'
 
 transStm :: Table -> Stm -> State Count [Instr]
 transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
@@ -153,10 +177,10 @@ transStm tabl (FuncCall func expr)
   = do (code1,temps) <- transExps tabl expr
        return (code1 ++ [CALL func (temps)])
 
-       --transStm tabl (PrintStr expr)
---  = do temp <- newTemp
---       code <- transExpr tabl expr dest
---       return (code ++ [PRINTSTR temp])
+transStm tabl (PrintStr expr)
+  = do temp <- newTemp
+       code <- transExpr tabl expr temp
+       return (code ++ [PRINTSTR temp])
 
 transBlock:: Table -> [Stm] -> State Count [Instr]
 transBlock tabl [] = return []

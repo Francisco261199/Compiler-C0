@@ -88,7 +88,7 @@ Stm : OpStm                                   { VarOp $1 }
     | return Exp ';'                         { Return $2 }
     | id '(' Exps ')' ';'                     { FuncCall $1 $3 }
     | print_int '(' Exp ')' ';'               { PrintInt $3 }
-    | print_str '(' str ')' ';'               { PrintStr $3 }
+    | print_str '(' Exp ')' ';'               { PrintStr $3 }
 
 Exp : num { Num $1 }
     | str { Str $1 }
@@ -184,7 +184,7 @@ data Stm = If ExpCompare Stm
          | While ExpCompare Stm
          | FuncCall String [Exp]
          | PrintInt Exp
-         | PrintStr String
+         | PrintStr Exp
          | For OpFor ExpCompare Op Stm
          | Block [Stm]
          | Return Exp
@@ -195,7 +195,7 @@ data Exp = Num Int
          | Var String
          | Bconst Bool
          | Op BinOp Exp Exp
-         | ScanInt 
+         | ScanInt
          | FuncCallExp String [Exp]
          deriving Show
 
