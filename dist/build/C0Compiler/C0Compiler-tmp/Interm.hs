@@ -21,6 +21,7 @@ data Instr = MOVE Temp Temp
            | RETURN Temp
            | PRINTINT Temp
            | PRINTSTR Temp
+           | CALL String [Temp]
            | SCANINT
            deriving Show
 
@@ -50,10 +51,34 @@ extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 --extendTableIm tbl ((temp,n):rest) = extendTableIm (Map.insert n temp tbl) rest
 
 
+
+
+
+getDeclAux :: Table -> Stm -> State Count Table
+getDeclAux tabl stm = case stm of
+                        (VarOp (Declr t n)) -> do temp <- newTemp
+                                                  let tabl1 = extendTable tabl [(temp,n)]
+                                                  return (tabl1)
+                        (VarOp (DeclAsgn tp x expr)) -> do temp <- newTemp
+                                                           let tabl1 = extendTable tabl [(temp,x)]
+                                                           return (tabl1)
+                        (VarOp (Assign var expr)) -> case Map.lookup var tabl of
+                                                       Just temp -> return tabl
+                                                       Nothing -> error "Variable not defined"
+                        (Block stm1) -> do tabl' <- getDecl tabl (Block stm1)
+                                           return tabl'
+
+
+getDecl :: Table -> Stm -> State Count Table
+getDecl tabl (Block []) = return tabl
+getDecl tabl (Block (stm:stms)) = do tabl1 <- getDeclAux tabl stm 
+                                     tabl2 <- getDecl tabl1 (Block stms)
+                                     return tabl2
+          
 transStm :: Table -> Stm -> Temp -> State Count [Instr]
 transStm tabl (VarOp (Declr tp x)) dest = case Map.lookup x tabl of
                                             Just temp -> return [MOVE temp x]
-                                            Nothing -> return [MOVE dest x]
+                                            Nothing -> error "Variable not defined"
 
 transStm tabl (VarOp (DeclAsgn tp x expr)) dest = do t1 <- newTemp
                                                      let tabl' = extendTable tabl [(dest,x)]
@@ -124,7 +149,11 @@ transStm tabl (PrintInt expr) dest
        code <- transExpr tabl expr dest
        return (code ++ [PRINTINT temp])
 
---transStm tabl (PrintStr expr) dest
+transStm tabl (FuncCall func exp) dest
+  = do (code1,temps) <- transExps tabl exp
+       return (code1 ++ [CALL func (temps)])
+       
+       --transStm tabl (PrintStr expr) dest
 --  = do temp <- newTemp
 --       code <- transExpr tabl expr dest
 --       return (code ++ [PRINTSTR temp])
@@ -155,6 +184,20 @@ transExpr tabl (Op op e1 e2) dest
 
 transExpr tabl ScanInt dest = return [SCANINT]
 
+
+transExpr tabl (FuncCallExp func exp) dest
+  = do (code1,temps) <- transExps tabl exp
+       return (code1 ++ [CALL func (temps)])
+
+
+transExps::Table -> [Exp] -> State Count ([Instr],[Temp])
+transExps tabl [] = return ([],[])
+transExps tabl (exp:exps) = do temp1 <- newTemp
+                               code1 <- transExpr tabl exp temp1
+                               (code2,temps) <- transExps tabl exps
+                               return (code1 ++ code2,[temp1] ++ temps)
+
+
 transCond :: Table -> ExpCompare -> Label -> Label -> State Count [Instr]
 transCond tabl (Cond op e1 e2) labelt labelf = do temp1 <- newTemp
                                                   temp2 <- newTemp
@@ -178,6 +221,11 @@ transCond tabl (Or e1 e2) labelt labelf = do sclbl <- newLabel
 transCond tabl (CBool True) labelt labelf = return [JUMP labelt]
 
 transCond tabl (CBool False) labelt labelf = return [JUMP labelf]
+
+
+-- transCond tabl (FuncCallExpC func exp) labelf
+ --  = do (code1,temps) <- transExps tabl exp
+  --     return (code1 ++ [CALL func (temps)])
 
 
 --transStm :: Table -> Stm -> State Count [Instr]
