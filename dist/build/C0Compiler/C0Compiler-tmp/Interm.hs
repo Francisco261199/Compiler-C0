@@ -23,10 +23,10 @@ data Instr = MOVE Temp Temp
            | PRINTSTR Temp
            | CALL String [Temp]
            | SCANINT
-           | FUNCIR String [Temp] [Instr]
            deriving Show
 
---data FuncIR = deriving Show
+data FuncIR= FUNCIR String [Temp] [Instr]
+              deriving Show
 
 newTemp :: State Count Temp
 newTemp = do (temps,labels )<-get
@@ -51,15 +51,18 @@ extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 --extendTableIm tbl [] = tbl
 --extendTableIm tbl ((temp,n):rest) = extendTableIm (Map.insert n temp tbl) rest
 
---transAst :: Table -> [Func] -> State Count [Instr]
---transAst tabl
+transAst :: Table -> [Func] -> State Count [FuncIR]
+transAst tabl [] = return []
+transAst tabl (first:rest) = do temp <- transFunc tabl first
+                                temp1 <- transAst tabl rest
+                                return ([temp] ++ temp1)
 
-transFunc :: Table -> Func -> State Count [Instr]
-transFunc tabl (Funct _ name [decls] [block]) = do tabl1 <- getDeclFunc tabl [decls]
-                                                   tabl2 <- getDecl tabl1 (Block [block])
-                                                   dclList <- getDeclList tabl1 [decls]
-                                                   code1 <- transBlock tabl2 [block]
-                                                   return [FUNCIR name dclList code1]
+transFunc :: Table -> Func -> State Count FuncIR
+transFunc tabl (Funct _ name decls block) = do tabl1 <- getDeclFunc tabl decls
+                                               tabl2 <- getDecl tabl1 (Block block)
+                                               dclList <- getDeclList tabl1 decls
+                                               code1 <- transBlock tabl2 block
+                                               return (FUNCIR name dclList code1)
 --get list of temps for FuncIR
 getDeclList :: Table -> [Dcl] -> State Count [Temp]
 getDeclList tabl [] = return []
@@ -101,6 +104,7 @@ getDeclAux tabl stm = case stm of
                        (Block stm1) -> do tabl' <- getDecl tabl (Block stm1)
                                           return tabl'
                        stm -> return tabl
+
 transStm :: Table -> Stm -> State Count [Instr]
 transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
                                         Just temp -> return [MOVE temp x]
