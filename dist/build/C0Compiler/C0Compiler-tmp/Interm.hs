@@ -63,6 +63,7 @@ transFunc tabl (Funct _ name decls block) = do tabl1 <- getDeclFunc tabl decls
                                                dclList <- getDeclList tabl1 decls
                                                code1 <- transBlock tabl2 block
                                                return (FUNCIR name dclList code1)
+
 --get list of temps for FuncIR
 getDeclList :: Table -> [Dcl] -> State Count [Temp]
 getDeclList tabl [] = return []
