@@ -24,13 +24,13 @@ genMachineCodeAux (FUNCIR name decl block) =do pre <- "sw $fp, -4($sp)\n"++
                                                       "la $fp, 0($sp)\n"++
                                                       "la $sp, -8($sp)\n"
                                                args <- genArg decl
-                                               code <- genFuncCode block 
+                                               code <- genFuncCode block
                                                func <- name ++ ":\n" ++ pre ++ args ++ code
                                                return func
 
 
 genArg :: [Temps] -> String
-genArg xs = do 
+genArg xs = do
 
 
 genFuncCode :: [Instr] -> String
@@ -44,7 +44,7 @@ genFuncCodeAux (MOVE s1 s2) = "move " ++ "$"++s1++", $" ++ s2 ++ "\n"
 
 genFuncCodeAux (MOVEI s1 x) = "li " ++"$"++s1++", "++x++"\n"
 
-genFuncCodeAux (OP op s0 s1 s2) = case op of 
+genFuncCodeAux (OP op s0 s1 s2) = case op of
                                     Add -> "add " ++ "$" ++ s0 ++ ", $" ++ s1 ++ ", $" ++ s2 ++ "\n"
                                     Times -> "mult " ++ "$" ++ s0 ++ ", $" ++ s1 ++ ", $" ++ s2 ++ "\n"
                                     Minus -> "sub " ++ "$" ++ s0 ++ ", $" ++ s1 ++ ", $" ++ s2 ++ "\n"
@@ -56,4 +56,4 @@ genFuncCodeAux (OPI Add s0 s1 x) = "addi " ++ "$" ++ s0 ++ ", $" ++s1  ++ ", " +
 
 genFuncCodeAux (Cond c1 op c2 ltrue lfalse) = case op of
                                                 LessThan -> "blt " ++ "$" ++ c1 ++ ", $" ++ c2 ++" ," ++ labelt ++"\n" ++ "j " ++ labelf ++"\n"
-                                                GreaterThan ->  
+                                                GreaterThan ->
