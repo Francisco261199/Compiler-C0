@@ -85,7 +85,7 @@ Stm : OpStm                                   { VarOp $1 }
     | for '(' OpFor ExpCompare ';' Op ')' Stm { For $3 $4 $6 $8 }
     | while '(' ExpCompare ')' Stm            { While $3 $5 }
     | '{' Stmts '}'                           { Block $2 }
-    | return Exp ';'                         { Return $2 }
+    | return Exp ';'                          { Return $2 }
     | id '(' Exps ')' ';'                     { FuncCall $1 $3 }
     | print_int '(' Exp ')' ';'               { PrintInt $3 }
     | print_str '(' Exp ')' ';'               { PrintStr $3 }

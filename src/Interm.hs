@@ -25,7 +25,7 @@ data Instr = MOVE Temp Temp
            | SCANINT
            deriving Show
 
-data FuncIR= FUNCIR String [Temp] [Instr]
+data FuncIR = FUNCIR String [Temp] [Instr]
               deriving Show
 
 newTemp :: State Count Temp
@@ -38,18 +38,12 @@ newLabel = do (temps,labels)<-get
               put (temps,labels+1)
               return ("L"++show labels)
 
-insertVar :: Table -> String -> State Count Table
-insertVar tabl x = do temp <- newTemp
-                      return (Map.insert x temp tabl)
-
+insertVar :: Table -> String -> Temp -> State Count Table
+insertVar tabl x temp = return (Map.insert x temp tabl)
 
 extendTable:: Table -> [(Temp,String)] -> Table
 extendTable tbl [] = tbl
 extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
-
---extendTableIm:: Table -> [(Temp,Int)] -> Table
---extendTableIm tbl [] = tbl
---extendTableIm tbl ((temp,n):rest) = extendTableIm (Map.insert n temp tbl) rest
 
 transAst :: Table -> [Func] -> State Count [FuncIR]
 transAst tabl [] = return []
@@ -124,47 +118,118 @@ transStm tabl (VarOp (Assign var expr))
                      return (code1++[MOVE temp t1])
      Nothing -> error "variable no defined"
 
+
+transStm tabl (If cond (Block stms))
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       code0 <- transCond tabl cond ltrue lfalse
+       table <- getDecl tabl (Block stms)
+       code1 <- transStm table (Block stms)
+       return (code0 ++ [LABEL ltrue] ++ code1 ++ [LABEL lfalse])
+
+
 transStm tabl (If cond stm)
   = do ltrue <- newLabel
        lfalse <- newLabel
        code0 <- transCond tabl cond ltrue lfalse
-       code1 <- transStm tabl stm
+       table <- getDecl tabl (Block [stm])
+       code1 <- transStm table stm
        return (code0 ++ [LABEL ltrue] ++ code1 ++ [LABEL lfalse])
+
+transStm tabl (IfElse cond (Block stm1) (Block stm2))
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       lend <- newLabel
+       code0 <- transCond tabl cond ltrue lfalse
+       table1 <- getDecl tabl (Block stm1)
+       code1 <- transStm table1 (Block stm1)
+       table2 <- getDecl tabl (Block stm2)
+       code2 <- transStm table2 (Block stm2)
+       return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
+
+transStm tabl (IfElse cond (Block stm1) stm2)
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       lend <- newLabel
+       code0 <- transCond tabl cond ltrue lfalse
+       table1 <- getDecl tabl (Block stm1)
+       code1 <- transStm table1 (Block stm1)
+       table2 <- getDecl tabl (Block [stm2])
+       code2 <- transStm table2 stm2
+       return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
+
+transStm tabl (IfElse cond stm1 (Block stm2))
+  = do ltrue <- newLabel
+       lfalse <- newLabel
+       lend <- newLabel
+       code0 <- transCond tabl cond ltrue lfalse
+       table1 <- getDecl tabl (Block [stm1])
+       code1 <- transStm table1 stm1
+       table2 <- getDecl tabl (Block stm2)
+       code2 <- transStm table2 (Block stm2)
+       return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
 
 transStm tabl (IfElse cond stm1 stm2)
    = do ltrue <- newLabel
         lfalse <- newLabel
         lend <- newLabel
         code0 <- transCond tabl cond ltrue lfalse
-        code1 <- transStm tabl stm1
-        code2 <- transStm tabl stm2
+        table1 <- getDecl tabl (Block [stm1])
+        code1 <- transStm table1 stm1
+        table2 <- getDecl tabl (Block [stm2])
+        code2 <- transStm table2 stm2
         return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
 
-{-
-transStm tabl (For decl cond op stm1)
+
+transStm tabl (For decl cond op (Block stms))
   = do ltrue <- newLabel
        lloop <- newLabel
        lend <- newLabel
        lcond <- newLabel
-       tempdcl <- newTemp
-       code0 <- transExpr tabl decl tempdcl
-       code1 <- transCond tabl cond ltrue lend
-       code2 <- transOp tabl op
-       code3 <- transStm tabl stm1 dest
+       (code0,tabl') <- transOpFor tabl decl
+       code1 <- transCond tabl' cond ltrue lend
+       code2 <- transOp tabl' op
+       tabl1 <- getDecl tabl' (Block stms)
+       code3 <- transStm tabl1 (Block stms)
        return (code0 ++ [LABEL lloop] ++
                code1 ++ [LABEL ltrue] ++ code3 ++ code2 ++
                [JUMP lloop, LABEL lend])
--}
 
-transStm tabl (While cond stm1)
+transStm tabl (For decl cond op stm)
+  = do ltrue <- newLabel
+       lloop <- newLabel
+       lend <- newLabel
+       lcond <- newLabel
+       (code0,tabl') <- transOpFor tabl decl
+       code1 <- transCond tabl' cond ltrue lend
+       code2 <- transOp tabl' op
+       tabl1 <- getDecl tabl' (Block [stm])
+       code3 <- transStm tabl1 stm
+       return (code0 ++ [LABEL lloop] ++
+               code1 ++ [LABEL ltrue] ++ code3 ++ code2 ++
+               [JUMP lloop, LABEL lend])
+
+transStm tabl (While cond (Block stms))
   = do ltrue <- newLabel
        lloop <- newLabel
        lend <- newLabel
        code1 <- transCond tabl cond ltrue lend
-       code2 <- transStm tabl stm1
+       table <- getDecl tabl (Block stms)
+       code2 <- transStm table (Block stms)
        return ([LABEL lloop] ++ code1 ++
                [LABEL ltrue] ++ code2 ++
                [JUMP lloop, LABEL lend])
+
+transStm tabl (While cond stm)
+  = do ltrue <- newLabel
+       lloop <- newLabel
+       lend <- newLabel
+       code1 <- transCond tabl cond ltrue lend
+       table <- getDecl tabl (Block [stm])
+       code2 <- transStm table stm
+       return ([LABEL lloop] ++ code1 ++
+              [LABEL ltrue] ++ code2 ++
+              [JUMP lloop, LABEL lend])
 
 transStm tabl (Block stms)
   = do code1 <- transBlock tabl stms
@@ -198,6 +263,9 @@ transBlock tabl (first:rest)
 
 transExpr:: Table -> Exp -> Temp -> State Count [Instr]
 transExpr tabl (Num n) dest = return [MOVEI dest n]
+
+transExpr tabl (Bconst True) dest = return [MOVEI dest 1]
+transExpr tabl (Bconst False) dest = return [MOVEI dest 0] 
 
 transExpr tabl (Var x) dest
   = case Map.lookup x tabl of
@@ -256,6 +324,42 @@ transCond tabl (CBool True) labelt labelf = return [JUMP labelt]
 
 transCond tabl (CBool False) labelt labelf = return [JUMP labelf]
 
+transOpFor :: Table -> OpFor -> State Count ([Instr],Table)
+transOpFor tabl (ForAssign name expr) = case Map.lookup name tabl of
+                                          Just temp -> do temp <- newTemp
+                                                          code0 <- transExpr tabl expr temp
+                                                          return ((code0),tabl)
+                                          Nothing -> error"variable not defined"
+
+transOpFor tabl (ForDeclAsgn tp name expr) = do temp1 <- newTemp
+                                                temp2 <- newTemp
+                                                temp3 <- newTemp
+                                                tabl' <- insertVar tabl name temp1
+                                                code0 <- transExpr tabl' (Var name) temp2
+                                                code1 <- transExpr tabl' expr temp3
+                                                return ((code0 ++ code1),tabl')
+transOpFor tabl (Empty) = return ([],tabl)
+
+transOp :: Table -> Op -> State Count [Instr]
+transOp tabl (PreIncr name)
+  = case Map.lookup name tabl of
+      Just temp -> return ([OPI Add temp temp 1])
+      Nothing -> error "variable not defined"
+
+transOp tabl (PostIncr name)
+  = case Map.lookup name tabl of
+      Just temp -> return ([OPI Add temp temp 1])
+      Nothing -> error "variable not defined"
+
+transOp tabl (PreDecr name)
+  = case Map.lookup name tabl of
+      Just temp -> return ([OPI Minus temp temp 1])
+      Nothing -> error "variable not defined"
+
+transOp tabl (PostDecr name)
+  = case Map.lookup name tabl of
+      Just temp -> return ([OPI Minus temp temp 1])
+      Nothing -> error "variable not defined"
 
 -- transCond tabl (FuncCallExpC func exp) labelf
  --  = do (code1,temps) <- transExps tabl exp

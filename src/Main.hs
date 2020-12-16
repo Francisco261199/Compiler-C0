@@ -10,7 +10,7 @@ import Control.Monad.State
 main :: IO ()
 main = do
   passed <- getContents
-  -- print (parserC0 $ alexScanTokens passed)
+  --print (parserC0 $ alexScanTokens passed)
   let func = parserC0 (alexScanTokens passed)
   let code = evalState (transAst Map.empty func) (0,0)
   print code
