@@ -1,4 +1,4 @@
-/* Testar se um inteiro positivo é primo. */
+
 bool is_prime(int n) {
 int d;
 d = 2;

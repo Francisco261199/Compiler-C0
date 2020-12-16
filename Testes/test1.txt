@@ -1,4 +1,4 @@
-/* Calcular uma soma de quadrados. */
+
 int main() {
 int s; 
 int n;

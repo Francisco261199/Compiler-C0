@@ -1,4 +1,4 @@
-//comentário
+
 int main(){
  int n = 3;
  int d;

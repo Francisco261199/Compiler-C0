@@ -45,9 +45,19 @@ extendTable:: Table -> [(Temp,String)] -> Table
 extendTable tbl [] = tbl
 extendTable tbl ((temp,x):rest) = extendTable (Map.insert x temp tbl) rest
 
+popTemp:: Int -> State Count ()
+popTemp n = do (temps,labels) <-get
+               put (temps-n,labels)
+
+getTemp :: State Count Int
+getTemp = do (temps,labels) <- get
+             return temps
+
 transAst :: Table -> [Func] -> State Count [FuncIR]
 transAst tabl [] = return []
 transAst tabl (first:rest) = do temp <- transFunc tabl first
+                                n <- getTemp
+                                popTemp(n)
                                 temp1 <- transAst tabl rest
                                 return ([temp] ++ temp1)
 
@@ -105,19 +115,30 @@ transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
                                         Just temp -> return [MOVE temp x]
                                         Nothing -> error "Variable not defined"
 
+transStm tabl (VarOp (DeclAsgn tp x (Num n)))
+  = case Map.lookup x tabl of
+      Just temp -> do code1 <- transStm tabl (VarOp (Declr tp x))
+                      return (code1 ++ [MOVEI temp n])
+      Nothing -> error "variable not defined"
+
 transStm tabl (VarOp (DeclAsgn tp x expr)) = case Map.lookup x tabl of
                                                 Just temp -> do code1 <- transStm tabl (VarOp (Declr tp x))
                                                                 tempexpr <- newTemp
                                                                 code2 <- transExpr tabl expr tempexpr
                                                                 return (code1++code2++[MOVE temp tempexpr])
                                                 Nothing -> error "variable not defined"
+
+transStm tabl (VarOp (Assign var (Num n)))
+  = case Map.lookup var tabl of
+      Just temp -> do t1 <- newTemp
+                      return [MOVEI temp n]
+
 transStm tabl (VarOp (Assign var expr))
   = case Map.lookup var tabl of
      Just temp -> do t1 <- newTemp
                      code1 <- transExpr tabl expr t1
                      return (code1++[MOVE temp t1])
      Nothing -> error "variable no defined"
-
 
 transStm tabl (If cond (Block stms))
   = do ltrue <- newLabel
@@ -237,11 +258,13 @@ transStm tabl (Block stms)
 
 transStm tabl (Return expr)
   = do temp <-newTemp
+       popTemp(1)
        code <- transExpr tabl expr temp
        return (code ++ [RETURN temp])
 
 transStm tabl (PrintInt expr)
   = do temp <- newTemp
+       popTemp(1)
        code <- transExpr tabl expr temp
        return (code ++ [PRINTINT temp])
 
@@ -251,11 +274,13 @@ transStm tabl (FuncCall func expr)
 
 transStm tabl (PrintStr (Str str))
   = do temp <- newTemp
+       popTemp(1)
        let code = [MOVE temp str]
        return (code ++ [PRINTSTR temp])
 
 transStm tabl (PrintStr expr)
   = do temp <- newTemp
+       popTemp(1)
        code <- transExpr tabl expr temp
        return (code ++ [PRINTSTR temp])
 
@@ -287,6 +312,7 @@ transExpr tabl (Op op e1 e2) dest
        temp2 <- newTemp
        code1 <- transExpr tabl e1 temp1
        code2 <- transExpr tabl e2 temp2
+       popTemp(2)
        return (code1 ++ code2 ++ [OP op dest temp1 temp2])
 
 transExpr tabl ScanInt dest = return [SCANINT]
@@ -301,6 +327,7 @@ transExps::Table -> [Exp] -> State Count ([Instr],[Temp])
 transExps tabl [] = return ([],[])
 transExps tabl (expr:exprs) = do temp1 <- newTemp
                                  code1 <- transExpr tabl expr temp1
+                                 popTemp(1)
                                  (code2,temps) <- transExps tabl exprs
                                  return (code1 ++ code2,[temp1] ++ temps)
 
@@ -310,6 +337,7 @@ transCond tabl (Cond op e1 e2) labelt labelf = do temp1 <- newTemp
                                                   temp2 <- newTemp
                                                   code1 <- transExpr tabl e1 temp1
                                                   code2 <- transExpr tabl e2 temp2
+                                                  popTemp(2)
                                                   return (code1++code2++[COND temp1 op temp2 labelt labelf])
 
 transCond tabl (Not expr) labelt labelf = do temp1 <- transCond tabl expr labelf labelt

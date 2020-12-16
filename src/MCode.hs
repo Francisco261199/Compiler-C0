@@ -16,8 +16,6 @@ genMachineCode (first:rest) = do code1 <- genMachineCodeAux first
                                  return code1 ++ code2
 
 
-
-
 genMachineCodeAux :: FuncIR -> String
 genMachineCodeAux (FUNCIR name decl block) =do pre <- "sw $fp, -4($sp)\n"++
                                                       "sw $ra, -8($sp)\n"++
@@ -27,7 +25,6 @@ genMachineCodeAux (FUNCIR name decl block) =do pre <- "sw $fp, -4($sp)\n"++
                                                code <- genFuncCode block
                                                func <- name ++ ":\n" ++ pre ++ args ++ code
                                                return func
-
 
 genArg :: [Temps] -> String
 genArg xs = do
