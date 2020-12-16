@@ -249,6 +249,11 @@ transStm tabl (FuncCall func expr)
   = do (code1,temps) <- transExps tabl expr
        return (code1 ++ [CALL func (temps)])
 
+transStm tabl (PrintStr (Str str))
+  = do temp <- newTemp
+       let code = [MOVE temp str]
+       return (code ++ [PRINTSTR temp])
+
 transStm tabl (PrintStr expr)
   = do temp <- newTemp
        code <- transExpr tabl expr temp
@@ -265,7 +270,7 @@ transExpr:: Table -> Exp -> Temp -> State Count [Instr]
 transExpr tabl (Num n) dest = return [MOVEI dest n]
 
 transExpr tabl (Bconst True) dest = return [MOVEI dest 1]
-transExpr tabl (Bconst False) dest = return [MOVEI dest 0] 
+transExpr tabl (Bconst False) dest = return [MOVEI dest 0]
 
 transExpr tabl (Var x) dest
   = case Map.lookup x tabl of
@@ -275,7 +280,7 @@ transExpr tabl (Var x) dest
 transExpr tabl (Str str) dest
   = case Map.lookup str tabl of
       Just temp -> return [MOVE dest temp]
-      Nothing -> error "invalid variable"
+      Nothing -> error "variable not found"
 
 transExpr tabl (Op op e1 e2) dest
   = do temp1 <- newTemp
