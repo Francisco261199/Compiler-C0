@@ -140,15 +140,6 @@ transStm tabl (VarOp (Assign var expr))
                      return (code1++[MOVE temp t1])
      Nothing -> error "variable no defined"
 
-transStm tabl (If cond (Block stms))
-  = do ltrue <- newLabel
-       lfalse <- newLabel
-       code0 <- transCond tabl cond ltrue lfalse
-       table <- getDecl tabl (Block stms)
-       code1 <- transStm table (Block stms)
-       return (code0 ++ [LABEL ltrue] ++ code1 ++ [LABEL lfalse])
-
-
 transStm tabl (If cond stm)
   = do ltrue <- newLabel
        lfalse <- newLabel
