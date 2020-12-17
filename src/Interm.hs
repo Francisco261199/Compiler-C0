@@ -112,7 +112,7 @@ getDeclAux tabl stm = case stm of
 
 transStm :: Table -> Stm -> State Count [Instr]
 transStm tabl (VarOp (Declr tp x)) = case Map.lookup x tabl of
-                                        Just temp -> return [MOVE temp x]
+                                        Just temp -> return []
                                         Nothing -> error "Variable not defined"
 
 transStm tabl (VarOp (DeclAsgn tp x (Num n)))
@@ -148,7 +148,7 @@ transStm tabl (If cond stm)
        code1 <- transStm table stm
        return (code0 ++ [LABEL ltrue] ++ code1 ++ [LABEL lfalse])
 
-transStm tabl (IfElse cond (Block stm1) (Block stm2))
+{-transStm tabl (IfElse cond (Block stm1) (Block stm2))
   = do ltrue <- newLabel
        lfalse <- newLabel
        lend <- newLabel
@@ -180,6 +180,7 @@ transStm tabl (IfElse cond stm1 (Block stm2))
        table2 <- getDecl tabl (Block stm2)
        code2 <- transStm table2 (Block stm2)
        return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
+-}
 
 transStm tabl (IfElse cond stm1 stm2)
    = do ltrue <- newLabel
@@ -192,7 +193,7 @@ transStm tabl (IfElse cond stm1 stm2)
         code2 <- transStm table2 stm2
         return (code0 ++ [LABEL ltrue] ++ code1 ++ [JUMP lend, LABEL lfalse] ++ code2 ++ [LABEL lend])
 
-
+{-}
 transStm tabl (For decl cond op (Block stms))
   = do ltrue <- newLabel
        lloop <- newLabel
@@ -205,7 +206,8 @@ transStm tabl (For decl cond op (Block stms))
        code3 <- transStm tabl1 (Block stms)
        return (code0 ++ [LABEL lloop] ++
                code1 ++ [LABEL ltrue] ++ code3 ++ code2 ++
-               [JUMP lloop, LABEL lend])
+              [JUMP lloop, LABEL lend]) 
+-}
 
 transStm tabl (For decl cond op stm)
   = do ltrue <- newLabel
@@ -220,7 +222,7 @@ transStm tabl (For decl cond op stm)
        return (code0 ++ [LABEL lloop] ++
                code1 ++ [LABEL ltrue] ++ code3 ++ code2 ++
                [JUMP lloop, LABEL lend])
-
+{-}
 transStm tabl (While cond (Block stms))
   = do ltrue <- newLabel
        lloop <- newLabel
@@ -230,7 +232,7 @@ transStm tabl (While cond (Block stms))
        code2 <- transStm table (Block stms)
        return ([LABEL lloop] ++ code1 ++
                [LABEL ltrue] ++ code2 ++
-               [JUMP lloop, LABEL lend])
+               [JUMP lloop, LABEL lend]) -}
 
 transStm tabl (While cond stm)
   = do ltrue <- newLabel
@@ -290,7 +292,7 @@ transExpr tabl (Bconst False) dest = return [MOVEI dest 0]
 
 transExpr tabl (Var x) dest
   = case Map.lookup x tabl of
-      Just temp -> return [MOVE dest x]
+      Just temp -> return [MOVE dest temp]
       Nothing -> error "Variable not defined"
 
 transExpr tabl (Str str) dest

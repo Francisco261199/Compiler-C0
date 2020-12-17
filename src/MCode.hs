@@ -71,14 +71,14 @@ genFuncCodeAux (COND c1 op c2 labelt labelf) = case op of
                                                                 ++ labelt ++ "\n"
                                                 IsNEqual -> "\tbeq $" ++ c1 ++ ", $" ++ c2 ++ " ," ++ labelf ++ "\n\tj "
                                                                 ++ labelt ++ "\n"
-                                                LessOrEqual -> "\tslt $" ++ c1 ++ ", $" ++ c1 ++ ", $" ++ c2 ++ "\n" ++ "\tbeq $" 
-                                                                ++ c1 ++ ", $0, " ++ labelt ++"\n" ++ "\tj " ++ labelf ++ "\n"
-                                                GreaterOrEqual -> "\tslt $" ++ c1 ++ ", $" ++ c2 ++ ", $" ++ c1 ++ "\n" ++ "\tbeq $" 
-                                                                ++ c1  ++ ", $0, " ++ labelt ++"\n" ++ "\tj "++ labelf  ++ "\n"
+                                                LessOrEqual -> "\tslt $s0" ++ ", $" ++ c1 ++ ", $" ++ c2 ++ "\n" ++ "\tbeq $s0" 
+                                                                ++ ", $0, " ++ labelt ++"\n" ++ "\tj " ++ labelf ++ "\n"
+                                                GreaterOrEqual -> "\tslt $s0" ++ ", $" ++ c2 ++ ", $" ++ c1 ++ "\n" ++ "\tbeq $0"
+                                                                ++ ", $0, " ++ labelt ++"\n" ++ "\tj "++ labelf  ++ "\n"
 
 genFuncCodeAux(LABEL l) = l ++ ":\n"
 
-genFuncCodeAux(JUMP l) = "\t j" ++ l ++ "\n"
+genFuncCodeAux(JUMP l) = "\t j " ++ l ++ "\n"
 
 genFuncCodeAux(RETURN f) = "\tmove $v0, $" ++ f ++ "\n" 
 
